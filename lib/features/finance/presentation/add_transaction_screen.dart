@@ -20,6 +20,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _descriptionController = TextEditingController(text: "Cotisation Mensuelle");
   User? _selectedUser;
   String _selectedMode = "Espèces";
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +67,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     controller: _amountController,
                     keyboardType: TextInputType.number,
                   ),
+                   const SizedBox(height: 16),
+                  LuxuryTextField(
+                    label: "DESCRIPTION",
+                    controller: _descriptionController,
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     dropdownColor: AppTheme.darkNavy,
@@ -83,6 +89,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             LuxuryButton(
               label: "VALIDER & IMPRIMER",
               icon: Icons.print,
+              isLoading: _isLoading,
               onPressed: () => _processTransaction(db),
             ),
           ],
@@ -92,33 +99,59 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<void> _processTransaction(AppDatabase db) async {
-    if (_selectedUser == null) return;
+    if (_selectedUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un résident.')));
+      return;
+    }
 
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final amount = double.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide.')));
+      return;
+    }
 
-    // 1. Add Transaction (Mock table interaction as Transactions table not fully defined in snippet context but assumed existing or we define mocked logic)
-    // Assuming we have a transactions table, but for this TEP let's focus on the Receipt Generation Flow logic.
-    // We will update User Balance.
+    setState(() => _isLoading = true);
 
-    final newBalance = _selectedUser!.balance + amount;
+    try {
+      final oldBalance = _selectedUser!.balance;
+      final newBalance = oldBalance + amount;
 
-    await (db.update(db.users)..where((t) => t.id.equals(_selectedUser!.id))).write(
-      UsersCompanion(balance: drift.Value(newBalance)),
-    );
+      // 1. Insert Transaction Record
+      final txId = await db.into(db.transactions).insert(
+        TransactionsCompanion.insert(
+          amount: amount,
+          date: DateTime.now(),
+          description: _descriptionController.text.isNotEmpty ? _descriptionController.text : "Paiement",
+          userId: drift.Value(_selectedUser!.id),
+          type: 'income',
+        ),
+      );
 
-    if (mounted) {
-      _showSuccessDialog(amount, newBalance);
+      // 2. Update User Balance
+      await (db.update(db.users)..where((t) => t.id.equals(_selectedUser!.id))).write(
+        UsersCompanion(balance: drift.Value(newBalance)),
+      );
+
+      if (mounted) {
+        _showSuccessDialog(amount, newBalance, txId, oldBalance);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessDialog(double amount, double newBalance) {
+  void _showSuccessDialog(double amount, double newBalance, int txId, double oldBalance) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.darkNavy,
         title: const Text("Paiement Enregistré", style: TextStyle(color: AppTheme.gold)),
-        content: const Text("La transaction a été validée avec succès.", style: TextStyle(color: AppTheme.offWhite)),
+        content: const Text("La transaction a été enregistrée avec succès.", style: TextStyle(color: AppTheme.offWhite)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -131,13 +164,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             onPressed: () {
               // Generate PDF
               PdfGeneratorService().generateReceipt(
-                transactionId: DateTime.now().millisecondsSinceEpoch, // Mock ID
+                transactionId: txId,
                 residentName: _selectedUser!.name,
                 lotNumber: _selectedUser!.apartmentNumber ?? 0,
                 amount: amount,
                 mode: _selectedMode,
                 period: "${DateTime.now().month}/${DateTime.now().year}",
-                oldBalance: _selectedUser!.balance, // Approx
+                oldBalance: oldBalance,
                 newBalance: newBalance,
               );
             },

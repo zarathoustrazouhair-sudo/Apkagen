@@ -82,10 +82,13 @@ class ResidentDetailScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: StreamBuilder<User>(
-        stream: (db.select(db.users)..where((t) => t.id.equals(userId))).watchSingle(),
+        stream: (db.select(db.users)..where((t) => t.id.equals(userId))).watchSingleOrNull(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text("Erreur: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final user = snapshot.data!;
+
+          final user = snapshot.data;
+          if (user == null) return const Center(child: Text("Utilisateur introuvable", style: TextStyle(color: Colors.red)));
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
