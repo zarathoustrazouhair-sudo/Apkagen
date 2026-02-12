@@ -1,13 +1,17 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
+import 'package:residence_lamandier_b/features/finance/data/finance_provider.dart';
 
-class RecoveryDisk extends StatelessWidget {
+class RecoveryDisk extends ConsumerWidget {
   const RecoveryDisk({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(recoveryStatsProvider);
+
     return LuxuryCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -25,69 +29,60 @@ class RecoveryDisk extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             height: 100,
-            child: Stack(
-              children: [
-                PieChart(
-                  PieChartData(
-                    sectionsSpace: 4,
-                    centerSpaceRadius: 35,
-                    startDegreeOffset: 270,
-                    sections: [
-                      PieChartSectionData(
-                        color: const Color(0xFF00E5FF),
-                        value: 75,
-                        title: '',
-                        radius: 12,
+            child: statsAsync.when(
+              data: (stats) {
+                final paid = stats['paid']!;
+                final unpaid = stats['unpaid']!;
+                final percentage = stats['percentage']!;
+
+                // Avoid empty chart if no data
+                if (paid == 0 && unpaid == 0) {
+                  return const Center(child: Text("Pas de données", style: TextStyle(color: Colors.white)));
+                }
+
+                return Stack(
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        sectionsSpace: 4,
+                        centerSpaceRadius: 35,
+                        startDegreeOffset: 270,
+                        sections: [
+                          PieChartSectionData(
+                            color: const Color(0xFF00E5FF),
+                            value: paid,
+                            title: '',
+                            radius: 12,
+                          ),
+                          PieChartSectionData(
+                            color: const Color(0xFFFF0040),
+                            value: unpaid,
+                            title: '',
+                            radius: 10,
+                          ),
+                        ],
                       ),
-                      PieChartSectionData(
-                        color: const Color(0xFFFF0040),
-                        value: 25,
-                        title: '',
-                        radius: 10,
-                      ),
-                    ],
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    "75%",
-                    style: TextStyle(
-                      color: AppTheme.offWhite,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Playfair Display',
                     ),
-                  ),
-                ),
-              ],
+                    Center(
+                      child: Text(
+                        "${percentage.toInt()}%",
+                        style: const TextStyle(
+                          color: AppTheme.offWhite,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Playfair Display',
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              error: (err, stack) => const Center(child: Icon(Icons.error, color: Colors.red)),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppTheme.offWhite.withOpacity(0.8),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }
