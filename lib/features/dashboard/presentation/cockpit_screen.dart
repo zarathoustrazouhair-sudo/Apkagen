@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:residence_lamandier_b/core/theme/app_palettes.dart';
-import 'package:residence_lamandier_b/core/theme/luxury_widgets.dart';
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/apartment_grid.dart';
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/charts/cashflow_curve.dart';
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/charts/recovery_disk.dart';
@@ -23,7 +23,7 @@ class CockpitScreen extends ConsumerWidget {
       floatingActionButton: canEditFinance
           ? FloatingActionButton(
               onPressed: () {
-                // Add Finance Transaction
+                context.push('/finance/add');
               },
               backgroundColor: AppPalettes.gold,
               child: const Icon(Icons.add, color: AppPalettes.navy),
@@ -35,20 +35,32 @@ class CockpitScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. KPI Cards with Gold Shimmer Title
-            ShaderMask(
-              shaderCallback: (bounds) => AppPalettes.textGoldGradient,
-              child: const Text(
-                "SOLDE GLOBAL",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
-                  color: Colors.white, // Required for ShaderMask
+            InkWell(
+              onTap: () => context.push('/finance'),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => AppPalettes.textGoldGradient,
+                      child: const Text(
+                        "SOLDE GLOBAL",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                          color: Colors.white, // Required for ShaderMask
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const KpiCards(),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            const KpiCards(),
             const SizedBox(height: 16),
 
             // 2. Reminder Row
@@ -66,7 +78,7 @@ class CockpitScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const ApartmentGrid(), // Updated internally to use StatusBadge or logic if needed
+            const ApartmentGrid(),
             const SizedBox(height: 24),
 
             // 4. Charts
@@ -80,13 +92,16 @@ class CockpitScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: RecoveryDisk()),
-                SizedBox(width: 8),
-                Expanded(child: CashflowCurve()),
-              ],
+            InkWell(
+              onTap: () => context.push('/finance'),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: RecoveryDisk()),
+                  SizedBox(width: 8),
+                  Expanded(child: CashflowCurve()),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
           ],

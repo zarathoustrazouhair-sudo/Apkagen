@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,18 +37,19 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(transactions);
       }
+      if (from < 3) {
+        await m.addColumn(users, users.phoneNumber);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
-      // Force populate if empty, regardless of creation status (safe check)
+      // Force populate if empty
       final userCount = await (select(users).get()).then((l) => l.length);
       if (userCount == 0) {
          await _populateResidents();
       }
 
-      // Check if transactions table exists (it should if migration ran) and is empty
-      // To be safe we wrap in try-catch or just check count if table exists
       try {
         final txCount = await (select(transactions).get()).then((l) => l.length);
         if (txCount == 0) {
@@ -71,6 +72,7 @@ class AppDatabase extends _$AppDatabase {
             floor: Value(resident.floor),
             apartmentNumber: Value(resident.aptNumber),
             role: Value(resident.role),
+            phoneNumber: const Value("0600000000"),
           ),
         );
       }
@@ -83,6 +85,7 @@ class AppDatabase extends _$AppDatabase {
           id: Value(100),
           name: kAdjointName,
           role: Value('adjoint'),
+          phoneNumber: const Value("0600000000"),
         ),
       );
       // Concierge
@@ -92,6 +95,7 @@ class AppDatabase extends _$AppDatabase {
           id: Value(101),
           name: "Gardien Principal",
           role: Value('concierge'),
+          phoneNumber: const Value("0600000000"),
         ),
       );
     });

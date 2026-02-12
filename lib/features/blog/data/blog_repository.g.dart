@@ -6,7 +6,7 @@ part of 'blog_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$blogRepositoryHash() => r'908b400b26dc8a6f4705fb12c3cb48676f9096ba';
+String _$blogRepositoryHash() => r'92567028850a5857eaf5d258dc3155672d3b90f9';
 
 /// See also [blogRepository].
 @ProviderFor(blogRepository)

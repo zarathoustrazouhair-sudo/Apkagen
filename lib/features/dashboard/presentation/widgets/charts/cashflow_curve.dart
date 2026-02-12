@@ -1,13 +1,17 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:residence_lamandier_b/core/theme/app_palettes.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_widgets.dart';
+import 'package:residence_lamandier_b/features/finance/data/finance_provider.dart';
 
-class CashflowCurve extends StatelessWidget {
+class CashflowCurve extends ConsumerWidget {
   const CashflowCurve({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(cashflowHistoryProvider);
+
     return LuxuryCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -25,102 +29,94 @@ class CashflowCurve extends StatelessWidget {
           const SizedBox(height: 24),
           AspectRatio(
             aspectRatio: 1.70,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  horizontalInterval: 1,
-                  verticalInterval: 1,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: AppPalettes.offWhite.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                  getDrawingVerticalLine: (value) {
-                    return FlLine(
-                      color: AppPalettes.offWhite.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: bottomTitleWidgets,
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 1,
-                      getTitlesWidget: leftTitleWidgets,
-                      reservedSize: 42,
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.all(color: const Color(0xff37434d)),
-                ),
-                minX: 0,
-                maxX: 11,
-                minY: 0,
-                maxY: 6,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 3),
-                      FlSpot(2.6, 2),
-                      FlSpot(4.9, 5),
-                      FlSpot(6.8, 3.1),
-                      FlSpot(8, 4),
-                      FlSpot(9.5, 3),
-                      FlSpot(11, 4),
-                    ],
-                    isCurved: true,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF00FF88), Color(0xFF00E5FF)],
-                    ),
-                    barWidth: 5,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
+            child: historyAsync.when(
+              data: (history) {
+                if (history.every((e) => e == 0)) return const Center(child: Text("Pas de données", style: TextStyle(color: Colors.white)));
+
+                // Calculate spots
+                final spots = <FlSpot>[];
+                double maxVal = 0;
+                for (int i = 0; i < history.length; i++) {
+                  double val = history[i];
+                  spots.add(FlSpot(i.toDouble(), val));
+                  if (val.abs() > maxVal) maxVal = val.abs();
+                }
+
+                // Add some buffer to maxVal
+                if (maxVal == 0) maxVal = 100;
+                maxVal = maxVal * 1.2;
+
+                return LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
                       show: true,
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF00FF88).withOpacity(0.3),
-                          const Color(0xFF00E5FF).withOpacity(0.1),
-                        ],
+                      drawVerticalLine: true,
+                      horizontalInterval: maxVal / 4,
+                      verticalInterval: 1,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: AppPalettes.offWhite.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                      getDrawingVerticalLine: (value) => FlLine(
+                        color: AppPalettes.offWhite.withOpacity(0.1),
+                        strokeWidth: 1,
                       ),
                     ),
-                  ),
-                  LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 2),
-                      FlSpot(2.6, 1),
-                      FlSpot(4.9, 2),
-                      FlSpot(6.8, 1.5),
-                      FlSpot(8, 2),
-                      FlSpot(9.5, 1.8),
-                      FlSpot(11, 2.5),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) => bottomTitleWidgets(value, meta, context),
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: maxVal / 4,
+                          getTitlesWidget: (value, meta) => leftTitleWidgets(value, meta, maxVal),
+                          reservedSize: 42,
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: const Color(0xff37434d)),
+                    ),
+                    minX: 0,
+                    maxX: 5,
+                    minY: -maxVal,
+                    maxY: maxVal,
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: spots,
+                        isCurved: true,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00FF88), Color(0xFF00E5FF)],
+                        ),
+                        barWidth: 3,
+                        isStrokeCapRound: true,
+                        dotData: const FlDotData(show: true),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF00FF88).withOpacity(0.3),
+                              const Color(0xFF00E5FF).withOpacity(0.1),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
-                    isCurved: true,
-                    color: const Color(0xFFFF0040),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
                   ),
-                ],
-              ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => const Center(child: Icon(Icons.error)),
             ),
           ),
         ],
@@ -128,54 +124,35 @@ class CashflowCurve extends StatelessWidget {
     );
   }
 
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
+  Widget bottomTitleWidgets(double value, TitleMeta meta, BuildContext context) {
     const style = TextStyle(
       fontWeight: FontWeight.bold,
       fontSize: 10,
       color: Colors.grey,
     );
-    Widget text;
-    switch (value.toInt()) {
-      case 2:
-        text = const Text('MAR', style: style);
-        break;
-      case 5:
-        text = const Text('JUN', style: style);
-        break;
-      case 8:
-        text = const Text('SEP', style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
-    }
+
+    // Map index 0-5 to Month Names
+    final now = DateTime.now();
+    final monthIndex = (now.month - (5 - value.toInt()) - 1) % 12;
+    // Month array
+    const months = ['JAN', 'FEV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOU', 'SEP', 'OCT', 'NOV', 'DEC'];
 
     return SideTitleWidget(
       axisSide: meta.axisSide,
-      child: text,
+      child: Text(months[monthIndex], style: style),
     );
   }
 
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
+  Widget leftTitleWidgets(double value, TitleMeta meta, double maxVal) {
     const style = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: 10,
+      fontSize: 8,
       color: Colors.grey,
     );
-    String text;
-    switch (value.toInt()) {
-      case 1:
-        text = '10k';
-        break;
-      case 3:
-        text = '30k';
-        break;
-      case 5:
-        text = '50k';
-        break;
-      default:
-        return Container();
-    }
+
+    // Simplified formatter K
+    String text = "${(value / 1000).toStringAsFixed(0)}k";
+    if (value == 0) text = "0";
 
     return Text(text, style: style, textAlign: TextAlign.left);
   }

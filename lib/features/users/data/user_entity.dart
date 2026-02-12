@@ -9,4 +9,5 @@ class Users extends Table {
   RealColumn get balance => real().withDefault(const Constant(0.0))();
   TextColumn get accessCode => text().nullable()();
   BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
+  TextColumn get phoneNumber => text().nullable()();
 }
