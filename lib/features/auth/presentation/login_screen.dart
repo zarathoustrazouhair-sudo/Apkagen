@@ -41,13 +41,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: 40),
               Center(
-                child: Text(
-                  "QUI ÊTES-VOUS ?",
-                  style: AppTheme.luxuryTheme.textTheme.displayMedium?.copyWith(
-                    color: AppTheme.gold,
-                    fontSize: 24,
-                    letterSpacing: 2.0,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      "QUI ÊTES-VOUS ?",
+                      style: AppTheme.luxuryTheme.textTheme.displayMedium?.copyWith(
+                        color: AppTheme.gold,
+                        fontSize: 24,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text("Version 1.0.1", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  ],
                 ),
               ),
               const SizedBox(height: 40),

@@ -31,7 +31,7 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
       appBar: AppBar(
-        title: Text('INITIALISATION', style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(color: AppTheme.gold, fontSize: 18)),
+        title: Text('INITIALISATION (v1.0.1)', style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(color: AppTheme.gold, fontSize: 18)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
