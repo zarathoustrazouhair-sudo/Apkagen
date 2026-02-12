@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/financial_mood_icon.dart';
+import 'package:residence_lamandier_b/features/finance/data/finance_provider.dart';
 
-class KpiCards extends StatelessWidget {
+class KpiCards extends ConsumerWidget {
   const KpiCards({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balanceAsync = ref.watch(totalBalanceProvider);
+    final survivalAsync = ref.watch(monthlySurvivalProvider);
+
+    final currencyFormat = NumberFormat.currency(locale: 'fr_MA', symbol: 'DH', decimalDigits: 2);
+
     return Row(
       children: [
         // Solde Global Card
@@ -27,14 +35,18 @@ class KpiCards extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  "124,500 DH",
-                  style: TextStyle(
-                    color: AppTheme.gold,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Playfair Display',
+                balanceAsync.when(
+                  data: (balance) => Text(
+                    currencyFormat.format(balance),
+                    style: TextStyle(
+                      color: balance >= 0 ? AppTheme.gold : AppTheme.errorRed,
+                      fontSize: 18, // Reduced slightly to fit
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Playfair Display',
+                    ),
                   ),
+                  loading: () => const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                  error: (err, stack) => const Text("Erreur", style: TextStyle(color: Colors.red, fontSize: 10)),
                 ),
               ],
             ),
@@ -58,19 +70,23 @@ class KpiCards extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const FinancialMoodIcon(monthsOfSurvival: 4.5, size: 24),
-                    const SizedBox(width: 8),
-                    Text(
-                      "4.5 MOIS",
-                      style: TextStyle(
-                        color: AppTheme.offWhite,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                survivalAsync.when(
+                  data: (months) => Row(
+                    children: [
+                      FinancialMoodIcon(monthsOfSurvival: months, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        "${months.toStringAsFixed(1)} MOIS",
+                        style: const TextStyle(
+                          color: AppTheme.offWhite,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  loading: () => const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                  error: (err, stack) => const Text("-", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
