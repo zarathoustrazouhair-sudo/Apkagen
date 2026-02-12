@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
+import 'package:go_router/go_router.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
@@ -25,6 +26,30 @@ class ResidentDetailScreen extends ConsumerWidget {
     } catch (e) {
       debugPrint("Error launching phone call: $e");
     }
+  }
+
+  Future<void> _sendWhatsApp(String? phoneNumber, String residentName, double balance) async {
+      if (phoneNumber == null || phoneNumber.isEmpty) return;
+      // Format number (assume 06... -> 2126...)
+      // Simple logic for now
+      String formatted = phoneNumber.replaceAll(' ', '');
+      if (formatted.startsWith('0')) {
+        formatted = '212${formatted.substring(1)}';
+      }
+
+      final message = "Bonjour $residentName, sauf erreur, vous devez ${balance.abs()} DH à la résidence L'Amandier B.";
+      final url = "https://wa.me/$formatted?text=${Uri.encodeComponent(message)}";
+      final uri = Uri.parse(url);
+
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+           debugPrint("Could not launch WhatsApp");
+        }
+      } catch(e) {
+         debugPrint("Error WhatsApp: $e");
+      }
   }
 
   Future<void> _generateWarning(BuildContext context, User user) async {
@@ -81,6 +106,18 @@ class ResidentDetailScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: true,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+            // Pre-fill Transaction Screen
+            // Note: Since we don't have route arguments setup for pre-fill easily without refactor,
+            // we will just open AddTransactionScreen. User selects resident manually or we enhance later.
+            // For now, let's keep it simple as per TEP constraint or try to pass ID if possible.
+            context.push('/finance/add');
+        },
+        backgroundColor: AppTheme.gold,
+        icon: const Icon(Icons.add, color: AppTheme.darkNavy),
+        label: const Text("ENCAISSEMENT", style: TextStyle(color: AppTheme.darkNavy, fontWeight: FontWeight.bold)),
+      ),
       body: StreamBuilder<User>(
         stream: (db.select(db.users)..where((t) => t.id.equals(userId))).watchSingleOrNull(),
         builder: (context, snapshot) {
@@ -118,18 +155,26 @@ class ResidentDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       // Action Buttons Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        alignment: WrapAlignment.center,
                         children: [
                           ElevatedButton.icon(
                             onPressed: () => _makePhoneCall(user.phoneNumber),
-                            icon: const Icon(Icons.phone, color: AppTheme.darkNavy),
+                            icon: const Icon(Icons.phone, color: AppTheme.darkNavy, size: 18),
                             label: const Text("APPELER", style: TextStyle(color: AppTheme.darkNavy)),
                             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.gold),
                           ),
+                           ElevatedButton.icon(
+                            onPressed: () => _sendWhatsApp(user.phoneNumber, user.name, user.balance),
+                            icon: const Icon(Icons.chat, color: Colors.white, size: 18), // WhatsAppish
+                            label: const Text("WHATSAPP", style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          ),
                           ElevatedButton.icon(
                             onPressed: () => _generateWarning(context, user),
-                            icon: const Icon(Icons.picture_as_pdf, color: AppTheme.gold),
+                            icon: const Icon(Icons.picture_as_pdf, color: AppTheme.gold, size: 18),
                             label: const Text("RELANCE", style: TextStyle(color: AppTheme.gold)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.darkNavy,
