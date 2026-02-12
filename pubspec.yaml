@@ -1,0 +1,51 @@
+name: residence_lamandier_b
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  drift: ^2.14.1
+  sqlite3_flutter_libs: ^0.5.18
+  path_provider: ^2.1.5
+  path: ^1.8.3
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  supabase_flutter: ^2.12.0
+  google_fonts: ^8.0.1
+  fl_chart: ^0.66.0
+  percent_indicator: ^4.2.5
+  go_router: ^17.1.0
+  geolocator: ^14.0.2
+  url_launcher: ^6.3.2
+  permission_handler: ^12.0.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  shared_preferences: ^2.5.4
+  image_picker: ^1.2.1
+  connectivity_plus: ^7.0.0
+  flutter_image_compress: ^2.4.0
+  cached_network_image: ^3.4.1
+  timeago: ^3.7.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.3.3
+  drift_dev: ^2.14.1
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  supabase: ^2.10.2
+  dotenv: ^4.2.0
+
+flutter:
+  uses-material-design: true
