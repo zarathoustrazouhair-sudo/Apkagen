@@ -809,6 +809,17 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
+    'phoneNumber',
+  );
+  @override
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+    'phone_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -819,6 +830,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     balance,
     accessCode,
     isBlocked,
+    phoneNumber,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -882,6 +894,15 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         isBlocked.isAcceptableOrUnknown(data['is_blocked']!, _isBlockedMeta),
       );
     }
+    if (data.containsKey('phone_number')) {
+      context.handle(
+        _phoneNumberMeta,
+        phoneNumber.isAcceptableOrUnknown(
+          data['phone_number']!,
+          _phoneNumberMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -923,6 +944,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_blocked'],
       )!,
+      phoneNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone_number'],
+      ),
     );
   }
 
@@ -941,6 +966,7 @@ class User extends DataClass implements Insertable<User> {
   final double balance;
   final String? accessCode;
   final bool isBlocked;
+  final String? phoneNumber;
   const User({
     required this.id,
     required this.name,
@@ -950,6 +976,7 @@ class User extends DataClass implements Insertable<User> {
     required this.balance,
     this.accessCode,
     required this.isBlocked,
+    this.phoneNumber,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -968,6 +995,9 @@ class User extends DataClass implements Insertable<User> {
       map['access_code'] = Variable<String>(accessCode);
     }
     map['is_blocked'] = Variable<bool>(isBlocked);
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
     return map;
   }
 
@@ -987,6 +1017,9 @@ class User extends DataClass implements Insertable<User> {
           ? const Value.absent()
           : Value(accessCode),
       isBlocked: Value(isBlocked),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
     );
   }
 
@@ -1004,6 +1037,7 @@ class User extends DataClass implements Insertable<User> {
       balance: serializer.fromJson<double>(json['balance']),
       accessCode: serializer.fromJson<String?>(json['accessCode']),
       isBlocked: serializer.fromJson<bool>(json['isBlocked']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
     );
   }
   @override
@@ -1018,6 +1052,7 @@ class User extends DataClass implements Insertable<User> {
       'balance': serializer.toJson<double>(balance),
       'accessCode': serializer.toJson<String?>(accessCode),
       'isBlocked': serializer.toJson<bool>(isBlocked),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
     };
   }
 
@@ -1030,6 +1065,7 @@ class User extends DataClass implements Insertable<User> {
     double? balance,
     Value<String?> accessCode = const Value.absent(),
     bool? isBlocked,
+    Value<String?> phoneNumber = const Value.absent(),
   }) => User(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1041,6 +1077,7 @@ class User extends DataClass implements Insertable<User> {
     balance: balance ?? this.balance,
     accessCode: accessCode.present ? accessCode.value : this.accessCode,
     isBlocked: isBlocked ?? this.isBlocked,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
   );
   User copyWithCompanion(UsersCompanion data) {
     return User(
@@ -1056,6 +1093,9 @@ class User extends DataClass implements Insertable<User> {
           ? data.accessCode.value
           : this.accessCode,
       isBlocked: data.isBlocked.present ? data.isBlocked.value : this.isBlocked,
+      phoneNumber: data.phoneNumber.present
+          ? data.phoneNumber.value
+          : this.phoneNumber,
     );
   }
 
@@ -1069,7 +1109,8 @@ class User extends DataClass implements Insertable<User> {
           ..write('role: $role, ')
           ..write('balance: $balance, ')
           ..write('accessCode: $accessCode, ')
-          ..write('isBlocked: $isBlocked')
+          ..write('isBlocked: $isBlocked, ')
+          ..write('phoneNumber: $phoneNumber')
           ..write(')'))
         .toString();
   }
@@ -1084,6 +1125,7 @@ class User extends DataClass implements Insertable<User> {
     balance,
     accessCode,
     isBlocked,
+    phoneNumber,
   );
   @override
   bool operator ==(Object other) =>
@@ -1096,7 +1138,8 @@ class User extends DataClass implements Insertable<User> {
           other.role == this.role &&
           other.balance == this.balance &&
           other.accessCode == this.accessCode &&
-          other.isBlocked == this.isBlocked);
+          other.isBlocked == this.isBlocked &&
+          other.phoneNumber == this.phoneNumber);
 }
 
 class UsersCompanion extends UpdateCompanion<User> {
@@ -1108,6 +1151,7 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<double> balance;
   final Value<String?> accessCode;
   final Value<bool> isBlocked;
+  final Value<String?> phoneNumber;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1117,6 +1161,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.balance = const Value.absent(),
     this.accessCode = const Value.absent(),
     this.isBlocked = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
   });
   UsersCompanion.insert({
     this.id = const Value.absent(),
@@ -1127,6 +1172,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.balance = const Value.absent(),
     this.accessCode = const Value.absent(),
     this.isBlocked = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
   }) : name = Value(name);
   static Insertable<User> custom({
     Expression<int>? id,
@@ -1137,6 +1183,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<double>? balance,
     Expression<String>? accessCode,
     Expression<bool>? isBlocked,
+    Expression<String>? phoneNumber,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1147,6 +1194,7 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (balance != null) 'balance': balance,
       if (accessCode != null) 'access_code': accessCode,
       if (isBlocked != null) 'is_blocked': isBlocked,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
     });
   }
 
@@ -1159,6 +1207,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     Value<double>? balance,
     Value<String?>? accessCode,
     Value<bool>? isBlocked,
+    Value<String?>? phoneNumber,
   }) {
     return UsersCompanion(
       id: id ?? this.id,
@@ -1169,6 +1218,7 @@ class UsersCompanion extends UpdateCompanion<User> {
       balance: balance ?? this.balance,
       accessCode: accessCode ?? this.accessCode,
       isBlocked: isBlocked ?? this.isBlocked,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 
@@ -1199,6 +1249,9 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (isBlocked.present) {
       map['is_blocked'] = Variable<bool>(isBlocked.value);
     }
+    if (phoneNumber.present) {
+      map['phone_number'] = Variable<String>(phoneNumber.value);
+    }
     return map;
   }
 
@@ -1212,7 +1265,8 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('role: $role, ')
           ..write('balance: $balance, ')
           ..write('accessCode: $accessCode, ')
-          ..write('isBlocked: $isBlocked')
+          ..write('isBlocked: $isBlocked, ')
+          ..write('phoneNumber: $phoneNumber')
           ..write(')'))
         .toString();
   }
@@ -2250,6 +2304,7 @@ typedef $$UsersTableCreateCompanionBuilder =
       Value<double> balance,
       Value<String?> accessCode,
       Value<bool> isBlocked,
+      Value<String?> phoneNumber,
     });
 typedef $$UsersTableUpdateCompanionBuilder =
     UsersCompanion Function({
@@ -2261,6 +2316,7 @@ typedef $$UsersTableUpdateCompanionBuilder =
       Value<double> balance,
       Value<String?> accessCode,
       Value<bool> isBlocked,
+      Value<String?> phoneNumber,
     });
 
 final class $$UsersTableReferences
@@ -2331,6 +2387,11 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<bool> get isBlocked => $composableBuilder(
     column: $table.isBlocked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2408,6 +2469,11 @@ class $$UsersTableOrderingComposer
     column: $table.isBlocked,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UsersTableAnnotationComposer
@@ -2446,6 +2512,11 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<bool> get isBlocked =>
       $composableBuilder(column: $table.isBlocked, builder: (column) => column);
+
+  GeneratedColumn<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => column,
+  );
 
   Expression<T> transactionsRefs<T extends Object>(
     Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
@@ -2509,6 +2580,7 @@ class $$UsersTableTableManager
                 Value<double> balance = const Value.absent(),
                 Value<String?> accessCode = const Value.absent(),
                 Value<bool> isBlocked = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
                 name: name,
@@ -2518,6 +2590,7 @@ class $$UsersTableTableManager
                 balance: balance,
                 accessCode: accessCode,
                 isBlocked: isBlocked,
+                phoneNumber: phoneNumber,
               ),
           createCompanionCallback:
               ({
@@ -2529,6 +2602,7 @@ class $$UsersTableTableManager
                 Value<double> balance = const Value.absent(),
                 Value<String?> accessCode = const Value.absent(),
                 Value<bool> isBlocked = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
                 name: name,
@@ -2538,6 +2612,7 @@ class $$UsersTableTableManager
                 balance: balance,
                 accessCode: accessCode,
                 isBlocked: isBlocked,
+                phoneNumber: phoneNumber,
               ),
           withReferenceMapper: (p0) => p0
               .map(
