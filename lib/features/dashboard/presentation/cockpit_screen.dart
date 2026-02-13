@@ -7,6 +7,7 @@ import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/ch
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/charts/recovery_disk.dart';
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/kpi_cards.dart';
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/reminder_row.dart';
+import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/cockpit_active_widgets.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
 import 'package:residence_lamandier_b/core/router/app_router.dart';
 
@@ -34,6 +35,10 @@ class CockpitScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 0. Active Widgets (Survival, Incidents)
+            const CockpitActiveWidgets(),
+            const SizedBox(height: 24),
+
             // 1. KPI Cards with Gold Shimmer Title
             InkWell(
               onTap: () => context.push('/finance'),

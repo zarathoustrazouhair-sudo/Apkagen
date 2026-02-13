@@ -23,6 +23,11 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
   // Controllers
   final _residenceNameController = TextEditingController(text: "Résidence L'Amandier B");
   final _syndicNameController = TextEditingController(text: "Abdelati KENBOUCHI");
+  // Personnel Controllers
+  final _conciergeNameController = TextEditingController(text: "Gardien Principal");
+  final _cleanerNameController = TextEditingController(text: "Femme de Ménage");
+  final _maintenanceContactController = TextEditingController(text: "Technicien");
+
   final _adminPasswordController = TextEditingController();
   final _fixedCostController = TextEditingController(text: "15000"); // Default guess
 
@@ -42,7 +47,7 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
           children: [
             // Progress
             LinearProgressIndicator(
-              value: (_currentStep + 1) / 3,
+              value: (_currentStep + 1) / 4,
               backgroundColor: AppTheme.gold.withOpacity(0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.gold),
             ),
@@ -54,8 +59,9 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildStep1(),
-                  _buildStep2(),
-                  _buildStep3(),
+                  _buildStep2(), // Personnel
+                  _buildStep3(), // Finances
+                  _buildStep4(), // Security
                 ],
               ),
             ),
@@ -74,9 +80,9 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
                   const SizedBox(width: 10), // Spacer
 
                 LuxuryButton(
-                  label: _currentStep == 2 ? 'TERMINER' : 'SUIVANT',
+                  label: _currentStep == 3 ? 'TERMINER' : 'SUIVANT',
                   isLoading: _isLoading,
-                  onPressed: _currentStep == 2 ? _finishSetup : _nextStep,
+                  onPressed: _currentStep == 3 ? _finishSetup : _nextStep,
                 ),
               ],
             ),
@@ -108,6 +114,24 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          Text("PERSONNEL", style: AppTheme.luxuryTheme.textTheme.displaySmall),
+          const SizedBox(height: 24),
+          LuxuryTextField(label: "NOM CONCIERGE", controller: _conciergeNameController),
+          const SizedBox(height: 16),
+          LuxuryTextField(label: "FEMME DE MÉNAGE", controller: _cleanerNameController),
+          const SizedBox(height: 16),
+          LuxuryTextField(label: "CONTACT MAINTENANCE", controller: _maintenanceContactController),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep3() {
+    return LuxuryCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text("FINANCES", style: AppTheme.luxuryTheme.textTheme.displaySmall),
           const SizedBox(height: 8),
           Text(
@@ -125,7 +149,7 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
     );
   }
 
-  Widget _buildStep3() {
+  Widget _buildStep4() {
     return LuxuryCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,6 +200,12 @@ class _WizardScreenState extends ConsumerState<WizardScreen> {
       // 1. Save Settings
       await repo.saveSetting('residence_name', _residenceNameController.text);
       await repo.saveSetting('syndic_name', _syndicNameController.text);
+
+      // Save Personnel
+      await repo.saveSetting('concierge_name', _conciergeNameController.text);
+      await repo.saveSetting('cleaner_name', _cleanerNameController.text);
+      await repo.saveSetting('maintenance_contact', _maintenanceContactController.text);
+
       await repo.setMonthlyFixedCosts(double.tryParse(_fixedCostController.text) ?? 0.0);
       await repo.setAdminPassword(_adminPasswordController.text);
 

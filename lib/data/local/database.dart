@@ -22,6 +22,13 @@ class Transactions extends Table {
   TextColumn get type => text()(); // 'income', 'expense'
 }
 
+class Providers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get serviceType => text()(); // 'Plomberie', 'Electricité', 'Autre'
+  TextColumn get phone => text().nullable()();
+}
+
 class Users extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
@@ -35,12 +42,12 @@ class Users extends Table {
   BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions])
+@DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions, Providers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +65,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(users, users.balance);
         await m.addColumn(users, users.accessCode);
         await m.addColumn(users, users.isBlocked);
+      }
+      if (from < 5) {
+        await m.createTable(providers);
       }
     },
     beforeOpen: (details) async {

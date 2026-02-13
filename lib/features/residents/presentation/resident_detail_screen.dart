@@ -6,6 +6,7 @@ import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:residence_lamandier_b/core/services/pdf_generator_service.dart';
+import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
 
 class ResidentDetailScreen extends ConsumerWidget {
   final int userId;
@@ -52,10 +53,10 @@ class ResidentDetailScreen extends ConsumerWidget {
       }
   }
 
-  Future<void> _generateWarning(BuildContext context, User user) async {
+  Future<void> _generateWarning(BuildContext context, PdfGeneratorService pdfService, User user) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Génération du PDF en cours...')));
-      await PdfGeneratorService().generateWarningLetter(
+      await pdfService.generateWarningLetter(
          residentName: user.name,
          debtAmount: user.balance.abs(),
          delayDays: 15,
@@ -71,10 +72,10 @@ class ResidentDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _generateReceipt(BuildContext context, User user, double amount, int txId) async {
+  Future<void> _generateReceipt(BuildContext context, PdfGeneratorService pdfService, User user, double amount, int txId) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Génération du Reçu en cours...')));
-      await PdfGeneratorService().generateReceipt(
+      await pdfService.generateReceipt(
         transactionId: txId,
         residentName: user.name,
         lotNumber: user.apartmentNumber ?? 0,
@@ -97,6 +98,8 @@ class ResidentDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(appDatabaseProvider);
+    final settingsRepo = ref.watch(appSettingsRepositoryProvider);
+    final pdfService = PdfGeneratorService(settingsRepo);
 
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
@@ -173,7 +176,7 @@ class ResidentDetailScreen extends ConsumerWidget {
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                           ),
                           ElevatedButton.icon(
-                            onPressed: () => _generateWarning(context, user),
+                            onPressed: () => _generateWarning(context, pdfService, user),
                             icon: const Icon(Icons.picture_as_pdf, color: AppTheme.gold, size: 18),
                             label: const Text("RELANCE", style: TextStyle(color: AppTheme.gold)),
                             style: ElevatedButton.styleFrom(
@@ -209,6 +212,7 @@ class ResidentDetailScreen extends ConsumerWidget {
 
                           return _buildTransactionTile(
                             context,
+                            pdfService,
                             user,
                             "${tx.date.day}/${tx.date.month}/${tx.date.year}",
                             tx.amount,
@@ -229,7 +233,7 @@ class ResidentDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTransactionTile(BuildContext context, User user, String date, double amount, String desc, bool isCredit, int txId) {
+  Widget _buildTransactionTile(BuildContext context, PdfGeneratorService pdfService, User user, String date, double amount, String desc, bool isCredit, int txId) {
     return Card(
       color: Colors.black26,
       margin: const EdgeInsets.only(bottom: 8),
@@ -244,7 +248,7 @@ class ResidentDetailScreen extends ConsumerWidget {
             if (isCredit)
               IconButton(
                 icon: const Icon(Icons.picture_as_pdf, color: AppTheme.gold),
-                onPressed: () => _generateReceipt(context, user, amount, txId),
+                onPressed: () => _generateReceipt(context, pdfService, user, amount, txId),
               ),
           ],
         ),

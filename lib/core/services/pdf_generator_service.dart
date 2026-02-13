@@ -3,18 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
 
 class PdfGeneratorService {
+  final AppSettingsRepository _settingsRepo;
   final String _residenceName = "Résidence L'Amandier B";
   final String _syndicName = "M. Abdelati KENBOUCHI";
   final String _jurisdiction = "Tribunal de Première Instance de Casablanca";
+
+  PdfGeneratorService(this._settingsRepo);
 
   Future<void> generateFinancialReport(List<dynamic> users, List<dynamic> transactions, double monthlyFee) async {
     final doc = pw.Document();
 
     doc.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.a4.landscape,
+        pageFormat: PdfPageFormat.a4.landscape, // Keep landscape A4 for tables
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -81,39 +85,57 @@ class PdfGeneratorService {
     final now = DateTime.now();
     final dateStr = "${now.day}/${now.month}/${now.year}";
 
+    final cachetPath = await _settingsRepo.getSetting('cachet_path');
+    pw.MemoryImage? cachetImage;
+    if (cachetPath != null && File(cachetPath).existsSync()) {
+      cachetImage = pw.MemoryImage(File(cachetPath).readAsBytesSync());
+    }
+
     doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a4,
+      pageFormat: PdfPageFormat.a5, // A5 Format as requested
       build: (context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             _buildHeader("REÇU DE PAIEMENT N° $transactionId"),
-            pw.SizedBox(height: 30),
-            _buildInfoRow("DATE DU PAIEMENT", dateStr),
+            pw.SizedBox(height: 20),
+            _buildInfoRow("DATE", dateStr),
             _buildInfoRow("SYNDIC", _syndicName),
             pw.SizedBox(height: 10),
             pw.Divider(),
             pw.SizedBox(height: 10),
             _buildInfoRow("REÇU DE", "$residentName (Lot $lotNumber)"),
-            _buildInfoRow("MONTANT", "$amount DH (Cotisation Fixe)"),
-            _buildInfoRow("MODE DE RÈGLEMENT", mode),
-            _buildInfoRow("AFFECTATION", "Cotisation période $period"),
-            pw.SizedBox(height: 20),
+            _buildInfoRow("MONTANT", "$amount DH"),
+            _buildInfoRow("MODE", mode),
+            _buildInfoRow("OBJET", "Cotisation $period"),
+            pw.SizedBox(height: 15),
             pw.Container(
-              padding: const pw.EdgeInsets.all(10),
+              padding: const pw.EdgeInsets.all(8),
               decoration: pw.BoxDecoration(border: pw.Border.all()),
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("Ancien Solde: $oldBalance DH"),
+                  pw.Text("Ancien: $oldBalance DH", style: const pw.TextStyle(fontSize: 10)),
                   pw.Text("->"),
-                  pw.Text("Nouveau Solde: $newBalance DH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Nouveau: $newBalance DH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                 ],
               ),
             ),
             pw.Spacer(),
-            pw.Text("Signature du Syndic:", style: pw.TextStyle(fontStyle: pw.FontStyle.italic)),
-            pw.SizedBox(height: 50),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Text("Signature du Syndic:", style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10)),
+                if (cachetImage != null)
+                   pw.Container(
+                     width: 80,
+                     height: 80,
+                     child: pw.Image(cachetImage),
+                   ),
+              ]
+            ),
+            pw.SizedBox(height: 20),
           ],
         );
       },
@@ -133,78 +155,78 @@ class PdfGeneratorService {
     final now = DateTime.now();
     final dateStr = "${now.day}/${now.month}/${now.year}";
 
+    final cachetPath = await _settingsRepo.getSetting('cachet_path');
+    pw.MemoryImage? cachetImage;
+    if (cachetPath != null && File(cachetPath).existsSync()) {
+      cachetImage = pw.MemoryImage(File(cachetPath).readAsBytesSync());
+    }
+
     doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a4,
+      pageFormat: PdfPageFormat.a5, // A5 Format
       build: (context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             _buildHeader("MISE EN DEMEURE (Loi 18-00)"),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 10),
             pw.Align(
               alignment: pw.Alignment.centerRight,
-              child: pw.Text("Casablanca, le $dateStr"),
+              child: pw.Text("Casablanca, le $dateStr", style: const pw.TextStyle(fontSize: 10)),
             ),
-            pw.SizedBox(height: 40),
-            pw.Text("À l'attention de M./Mme $residentName", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-            if (apartmentNumber != null)
-              pw.Text("Appartement N° $apartmentNumber"),
-
-            pw.SizedBox(height: 30),
-            pw.Text("Objet : Relance pour impayés de charges de copropriété", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
             pw.SizedBox(height: 20),
+            pw.Text("M./Mme $residentName", style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            if (apartmentNumber != null)
+              pw.Text("Appartement N° $apartmentNumber", style: const pw.TextStyle(fontSize: 10)),
+
+            pw.SizedBox(height: 20),
+            pw.Text("Objet : Relance pour impayés", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline, fontSize: 12)),
+            pw.SizedBox(height: 10),
 
             pw.Paragraph(
-              text: "Monsieur, Madame,",
-              style: const pw.TextStyle(lineSpacing: 5),
+              text: "Sauf erreur, nous constatons un impayé de :",
+              style: const pw.TextStyle(fontSize: 10),
             ),
-            pw.Paragraph(
-              text: "Sauf erreur ou omission de notre part, nous constatons que vous n'avez pas procédé au règlement de vos charges de copropriété pour un montant total de :",
-              style: const pw.TextStyle(lineSpacing: 5),
-            ),
-             pw.SizedBox(height: 10),
+             pw.SizedBox(height: 5),
             pw.Center(
               child: pw.Text(
                 "${debtAmount.toStringAsFixed(2)} DH",
                 style: pw.TextStyle(
-                  fontSize: 18,
+                  fontSize: 14,
                   fontWeight: pw.FontWeight.bold,
                   color: PdfColors.red900
                 )
               ),
             ),
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 5),
 
             pw.Paragraph(
-              text: "Nous vous mettons en demeure de régulariser cette situation sous un délai de $delayDays jours à compter de la présente.",
-              style: const pw.TextStyle(lineSpacing: 5),
-            ),
-            pw.Paragraph(
-              text: "À défaut de paiement dans ce délai, votre dossier sera transmis à notre avocat pour le recouvrement forcé par voie judiciaire auprès du $_jurisdiction, conformément à la loi 18-00 régissant la copropriété.",
-              style: const pw.TextStyle(lineSpacing: 5),
-            ),
-            pw.Paragraph(
-              text: "Dans l'attente de votre règlement, veuillez agréer, Monsieur, Madame, l'expression de nos salutations distinguées.",
-              style: const pw.TextStyle(lineSpacing: 5),
+              text: "Nous vous mettons en demeure de régulariser sous $delayDays jours. Sinon, le dossier sera transmis à notre avocat pour recouvrement judiciaire.",
+              style: const pw.TextStyle(fontSize: 10),
             ),
 
-            pw.SizedBox(height: 50),
+            pw.SizedBox(height: 30),
             pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
-                  pw.Text("Le Syndic"),
-                  pw.SizedBox(height: 10),
-                  pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Syndic de la $_residenceName"),
+                  pw.Text("Le Syndic", style: const pw.TextStyle(fontSize: 10)),
+                  if (cachetImage != null)
+                     pw.Container(
+                       width: 80,
+                       height: 80,
+                       child: pw.Image(cachetImage),
+                     )
+                  else
+                     pw.SizedBox(height: 40), // Placeholder
+                  pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
                 ],
               ),
             ),
 
             pw.Spacer(),
             pw.Divider(),
-            pw.Center(child: pw.Text("$_residenceName - Syndicat des Copropriétaires", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700))),
+            pw.Center(child: pw.Text("$_residenceName", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700))),
           ],
         );
       },

@@ -6,6 +6,7 @@ class AppPalettes {
   static const Color red = Color(0xFFCF6679);
   static const Color green = Color(0xFF00E5FF);
   static const Color offWhite = Color(0xFFF8F8F8);
+  static const Color offBlack = Color(0xFF1E1E1E);
 
   static const LinearGradient goldGradient = LinearGradient(
     colors: [Color(0xFFD4AF37), Color(0xFFFDD835)],
