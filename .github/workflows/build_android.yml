@@ -1,35 +1,46 @@
-name: Build Android APK
+name: Build Amandier Logic V1
+
 on:
   push:
-    branches: [ '**' ] # Run on all branches
-  pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 1. Checkout Code (v4)
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: 2. Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - name: 3. Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.x'
           channel: 'stable'
 
-      - name: Clean & Install Dependencies
-        run: |
-          flutter clean
-          flutter pub get
+      - name: 4. Get Date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d_%Hh%M')" >> $GITHUB_OUTPUT
 
-      - name: Build APK
+      - name: 5. Install Dependencies
+        run: flutter pub get
+
+      - name: 6. Build APK (Release)
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK
+      - name: 7. Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Amandier_STRICT_${{ steps.date.outputs.date }}.apk
+
+      - name: 8. Upload Artifact (v4 FIXED)
         uses: actions/upload-artifact@v4
         with:
-          name: amandier-release-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: APK_Amandier_${{ steps.date.outputs.date }}
+          path: build/app/outputs/flutter-apk/Amandier_STRICT_${{ steps.date.outputs.date }}.apk
+          retention-days: 5
