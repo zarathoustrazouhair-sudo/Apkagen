@@ -96,7 +96,11 @@ class CockpitActiveWidgets extends ConsumerWidget {
                       children: [
                         const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
                         const SizedBox(height: 4),
-                        Text("$incidentCount", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                         // FIX OVERFLOW: Using FittedBox
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text("$incidentCount", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                        ),
                         const Text("INCIDENTS", style: TextStyle(color: Colors.redAccent, fontSize: 8)),
                       ],
                     ),

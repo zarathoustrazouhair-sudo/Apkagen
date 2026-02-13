@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:drift/drift.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 
 // Stream of all transactions
@@ -8,23 +9,17 @@ final transactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return db.select(db.transactions).watch();
 });
 
-// Derived: Total Balance
-// Explicitly using Riverpod's Provider to avoid conflict if any (though renaming Providers table solved the main one)
-final totalBalanceProvider = Provider<AsyncValue<double>>((ref) {
-  final transactionsAsync = ref.watch(transactionsProvider);
+// Derived: Total Balance (OPTIMIZED SQL)
+final totalBalanceProvider = StreamProvider<double>((ref) {
+  final db = ref.watch(appDatabaseProvider);
 
-  return transactionsAsync.whenData((transactions) {
-    if (transactions.isEmpty) return 0.0;
-
-    double total = 0.0;
-    for (var t in transactions) {
-      if (t.type == 'income') {
-        total += t.amount;
-      } else {
-        total -= t.amount;
-      }
-    }
-    return total;
+  return db.customSelect(
+    'SELECT '
+    '(SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE type = \'income\') - '
+    '(SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE type = \'expense\') AS total'
+  ).watch().map((rows) {
+    if (rows.isEmpty) return 0.0;
+    return rows.first.read<double>('total');
   });
 });
 
@@ -43,24 +38,33 @@ final monthlySurvivalProvider = Provider<AsyncValue<double>>((ref) {
 // Derived: Recovery Stats
 final recoveryStatsProvider = FutureProvider<Map<String, double>>((ref) async {
   final db = ref.watch(appDatabaseProvider);
-  final residents = await (db.select(db.users)..where((t) => t.role.equals('resident'))).get();
 
-  if (residents.isEmpty) return {'paid': 0.0, 'unpaid': 0.0, 'percentage': 0.0};
+  final residentCountQuery = await (db.selectOnly(db.users)
+    ..addColumns([db.users.id.count()])
+    ..where(db.users.role.equals('resident'))
+  ).getSingle();
 
-  int paidCount = 0;
-  for (var r in residents) {
-    if (r.balance >= 0) paidCount++;
-  }
+  final residentCount = residentCountQuery.read(db.users.id.count()) ?? 0; // Fix null safety
 
-  double percentage = (paidCount / residents.length) * 100;
+  if (residentCount == 0) return {'paid': 0.0, 'unpaid': 0.0, 'percentage': 0.0};
+
+  final paidCountQuery = await (db.selectOnly(db.users)
+    ..addColumns([db.users.id.count()])
+    ..where(db.users.balance.isBiggerOrEqualValue(0.0) & db.users.role.equals('resident'))
+  ).getSingle();
+
+  final paidCount = paidCountQuery.read(db.users.id.count()) ?? 0; // Fix null safety
+
+  double percentage = (paidCount / residentCount) * 100;
   return {
     'paid': paidCount.toDouble(),
-    'unpaid': (residents.length - paidCount).toDouble(),
+    'unpaid': (residentCount - paidCount).toDouble(),
     'percentage': percentage,
   };
 });
 
 // Derived: Cashflow History
+// Keeping this in Dart for now as complex date grouping in SQLite varies by platform
 final cashflowHistoryProvider = Provider<AsyncValue<List<double>>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
 
@@ -74,7 +78,7 @@ final cashflowHistoryProvider = Provider<AsyncValue<List<double>>>((ref) {
       if (diffInMonths >= 0 && diffInMonths < 6) {
         final index = 5 - diffInMonths;
         if (t.type == 'income') {
-          monthlyNet[index] += t.amount; // t.amount is double, list is double
+          monthlyNet[index] += t.amount;
         } else {
           monthlyNet[index] -= t.amount;
         }
