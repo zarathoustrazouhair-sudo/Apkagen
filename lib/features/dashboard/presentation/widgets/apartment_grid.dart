@@ -32,29 +32,29 @@ class ApartmentGrid extends ConsumerWidget {
             final apartmentNumber = index + 1;
             final resident = residentMap[apartmentNumber];
 
-            // Use real data if available, assuming balance field exists on User
-            final bool isDebt;
-            if (resident != null) {
-               isDebt = (resident.balance) < 0;
-            } else {
-               isDebt = apartmentNumber % 2 == 0;
-            }
+            // Use real balance if available
+            final bool isDebt = resident != null ? resident.balance < 0 : false;
 
             final Color borderColor = isDebt ? const Color(0xFFFF0040) : const Color(0xFF00E5FF);
+            final Color bgColor = resident != null ? AppTheme.darkNavy : Colors.grey.withOpacity(0.1);
 
             return GestureDetector(
               onTap: () {
                 if (resident != null) {
                   context.pushNamed('resident_detail', pathParameters: {'id': resident.id.toString()});
                 } else {
+                  // Fallback for empty apartments (should be covered by seeding)
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('No resident found for Apartment $apartmentNumber')),
+                    SnackBar(
+                      content: Text('Appartement $apartmentNumber : Aucun résident assigné'),
+                      backgroundColor: Colors.orange,
+                    ),
                   );
                 }
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkNavy,
+                  color: bgColor,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: borderColor.withOpacity(0.8),
@@ -69,13 +69,26 @@ class ApartmentGrid extends ConsumerWidget {
                   ],
                 ),
                 child: Center(
-                  child: Text(
-                    'AP$apartmentNumber',
-                    style: const TextStyle(
-                      color: AppTheme.offWhite,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'AP$apartmentNumber',
+                        style: const TextStyle(
+                          color: AppTheme.offWhite,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (resident != null)
+                        Text(
+                          resident.balance < 0 ? 'Dette' : 'OK',
+                          style: TextStyle(
+                            color: isDebt ? const Color(0xFFFF0040) : Colors.green,
+                            fontSize: 8,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),

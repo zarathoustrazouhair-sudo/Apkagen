@@ -746,9 +746,9 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   late final GeneratedColumn<int> floor = GeneratedColumn<int>(
     'floor',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.int,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _apartmentNumberMeta = const VerificationMeta(
     'apartmentNumber',
@@ -768,8 +768,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('resident'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _balanceMeta = const VerificationMeta(
     'balance',
@@ -782,6 +781,17 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
+    'phoneNumber',
+  );
+  @override
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+    'phone_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _accessCodeMeta = const VerificationMeta(
     'accessCode',
@@ -809,17 +819,6 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
-    'phoneNumber',
-  );
-  @override
-  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
-    'phone_number',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -828,9 +827,9 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     apartmentNumber,
     role,
     balance,
+    phoneNumber,
     accessCode,
     isBlocked,
-    phoneNumber,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -860,6 +859,8 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         _floorMeta,
         floor.isAcceptableOrUnknown(data['floor']!, _floorMeta),
       );
+    } else if (isInserting) {
+      context.missing(_floorMeta);
     }
     if (data.containsKey('apartment_number')) {
       context.handle(
@@ -875,11 +876,22 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         _roleMeta,
         role.isAcceptableOrUnknown(data['role']!, _roleMeta),
       );
+    } else if (isInserting) {
+      context.missing(_roleMeta);
     }
     if (data.containsKey('balance')) {
       context.handle(
         _balanceMeta,
         balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
+      );
+    }
+    if (data.containsKey('phone_number')) {
+      context.handle(
+        _phoneNumberMeta,
+        phoneNumber.isAcceptableOrUnknown(
+          data['phone_number']!,
+          _phoneNumberMeta,
+        ),
       );
     }
     if (data.containsKey('access_code')) {
@@ -892,15 +904,6 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
       context.handle(
         _isBlockedMeta,
         isBlocked.isAcceptableOrUnknown(data['is_blocked']!, _isBlockedMeta),
-      );
-    }
-    if (data.containsKey('phone_number')) {
-      context.handle(
-        _phoneNumberMeta,
-        phoneNumber.isAcceptableOrUnknown(
-          data['phone_number']!,
-          _phoneNumberMeta,
-        ),
       );
     }
     return context;
@@ -923,7 +926,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
       floor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}floor'],
-      ),
+      )!,
       apartmentNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}apartment_number'],
@@ -936,6 +939,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.double,
         data['${effectivePrefix}balance'],
       )!,
+      phoneNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone_number'],
+      ),
       accessCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}access_code'],
@@ -944,10 +951,6 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_blocked'],
       )!,
-      phoneNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}phone_number'],
-      ),
     );
   }
 
@@ -960,44 +963,42 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
 class User extends DataClass implements Insertable<User> {
   final int id;
   final String name;
-  final int? floor;
+  final int floor;
   final int? apartmentNumber;
   final String role;
   final double balance;
+  final String? phoneNumber;
   final String? accessCode;
   final bool isBlocked;
-  final String? phoneNumber;
   const User({
     required this.id,
     required this.name,
-    this.floor,
+    required this.floor,
     this.apartmentNumber,
     required this.role,
     required this.balance,
+    this.phoneNumber,
     this.accessCode,
     required this.isBlocked,
-    this.phoneNumber,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
-    if (!nullToAbsent || floor != null) {
-      map['floor'] = Variable<int>(floor);
-    }
+    map['floor'] = Variable<int>(floor);
     if (!nullToAbsent || apartmentNumber != null) {
       map['apartment_number'] = Variable<int>(apartmentNumber);
     }
     map['role'] = Variable<String>(role);
     map['balance'] = Variable<double>(balance);
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
     if (!nullToAbsent || accessCode != null) {
       map['access_code'] = Variable<String>(accessCode);
     }
     map['is_blocked'] = Variable<bool>(isBlocked);
-    if (!nullToAbsent || phoneNumber != null) {
-      map['phone_number'] = Variable<String>(phoneNumber);
-    }
     return map;
   }
 
@@ -1005,21 +1006,19 @@ class User extends DataClass implements Insertable<User> {
     return UsersCompanion(
       id: Value(id),
       name: Value(name),
-      floor: floor == null && nullToAbsent
-          ? const Value.absent()
-          : Value(floor),
+      floor: Value(floor),
       apartmentNumber: apartmentNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(apartmentNumber),
       role: Value(role),
       balance: Value(balance),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
       accessCode: accessCode == null && nullToAbsent
           ? const Value.absent()
           : Value(accessCode),
       isBlocked: Value(isBlocked),
-      phoneNumber: phoneNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(phoneNumber),
     );
   }
 
@@ -1031,13 +1030,13 @@ class User extends DataClass implements Insertable<User> {
     return User(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      floor: serializer.fromJson<int?>(json['floor']),
+      floor: serializer.fromJson<int>(json['floor']),
       apartmentNumber: serializer.fromJson<int?>(json['apartmentNumber']),
       role: serializer.fromJson<String>(json['role']),
       balance: serializer.fromJson<double>(json['balance']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
       accessCode: serializer.fromJson<String?>(json['accessCode']),
       isBlocked: serializer.fromJson<bool>(json['isBlocked']),
-      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
     );
   }
   @override
@@ -1046,38 +1045,38 @@ class User extends DataClass implements Insertable<User> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
-      'floor': serializer.toJson<int?>(floor),
+      'floor': serializer.toJson<int>(floor),
       'apartmentNumber': serializer.toJson<int?>(apartmentNumber),
       'role': serializer.toJson<String>(role),
       'balance': serializer.toJson<double>(balance),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
       'accessCode': serializer.toJson<String?>(accessCode),
       'isBlocked': serializer.toJson<bool>(isBlocked),
-      'phoneNumber': serializer.toJson<String?>(phoneNumber),
     };
   }
 
   User copyWith({
     int? id,
     String? name,
-    Value<int?> floor = const Value.absent(),
+    int? floor,
     Value<int?> apartmentNumber = const Value.absent(),
     String? role,
     double? balance,
+    Value<String?> phoneNumber = const Value.absent(),
     Value<String?> accessCode = const Value.absent(),
     bool? isBlocked,
-    Value<String?> phoneNumber = const Value.absent(),
   }) => User(
     id: id ?? this.id,
     name: name ?? this.name,
-    floor: floor.present ? floor.value : this.floor,
+    floor: floor ?? this.floor,
     apartmentNumber: apartmentNumber.present
         ? apartmentNumber.value
         : this.apartmentNumber,
     role: role ?? this.role,
     balance: balance ?? this.balance,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
     accessCode: accessCode.present ? accessCode.value : this.accessCode,
     isBlocked: isBlocked ?? this.isBlocked,
-    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
   );
   User copyWithCompanion(UsersCompanion data) {
     return User(
@@ -1089,13 +1088,13 @@ class User extends DataClass implements Insertable<User> {
           : this.apartmentNumber,
       role: data.role.present ? data.role.value : this.role,
       balance: data.balance.present ? data.balance.value : this.balance,
+      phoneNumber: data.phoneNumber.present
+          ? data.phoneNumber.value
+          : this.phoneNumber,
       accessCode: data.accessCode.present
           ? data.accessCode.value
           : this.accessCode,
       isBlocked: data.isBlocked.present ? data.isBlocked.value : this.isBlocked,
-      phoneNumber: data.phoneNumber.present
-          ? data.phoneNumber.value
-          : this.phoneNumber,
     );
   }
 
@@ -1108,9 +1107,9 @@ class User extends DataClass implements Insertable<User> {
           ..write('apartmentNumber: $apartmentNumber, ')
           ..write('role: $role, ')
           ..write('balance: $balance, ')
+          ..write('phoneNumber: $phoneNumber, ')
           ..write('accessCode: $accessCode, ')
-          ..write('isBlocked: $isBlocked, ')
-          ..write('phoneNumber: $phoneNumber')
+          ..write('isBlocked: $isBlocked')
           ..write(')'))
         .toString();
   }
@@ -1123,9 +1122,9 @@ class User extends DataClass implements Insertable<User> {
     apartmentNumber,
     role,
     balance,
+    phoneNumber,
     accessCode,
     isBlocked,
-    phoneNumber,
   );
   @override
   bool operator ==(Object other) =>
@@ -1137,21 +1136,21 @@ class User extends DataClass implements Insertable<User> {
           other.apartmentNumber == this.apartmentNumber &&
           other.role == this.role &&
           other.balance == this.balance &&
+          other.phoneNumber == this.phoneNumber &&
           other.accessCode == this.accessCode &&
-          other.isBlocked == this.isBlocked &&
-          other.phoneNumber == this.phoneNumber);
+          other.isBlocked == this.isBlocked);
 }
 
 class UsersCompanion extends UpdateCompanion<User> {
   final Value<int> id;
   final Value<String> name;
-  final Value<int?> floor;
+  final Value<int> floor;
   final Value<int?> apartmentNumber;
   final Value<String> role;
   final Value<double> balance;
+  final Value<String?> phoneNumber;
   final Value<String?> accessCode;
   final Value<bool> isBlocked;
-  final Value<String?> phoneNumber;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1159,21 +1158,23 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.apartmentNumber = const Value.absent(),
     this.role = const Value.absent(),
     this.balance = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
     this.accessCode = const Value.absent(),
     this.isBlocked = const Value.absent(),
-    this.phoneNumber = const Value.absent(),
   });
   UsersCompanion.insert({
     this.id = const Value.absent(),
     required String name,
-    this.floor = const Value.absent(),
+    required int floor,
     this.apartmentNumber = const Value.absent(),
-    this.role = const Value.absent(),
+    required String role,
     this.balance = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
     this.accessCode = const Value.absent(),
     this.isBlocked = const Value.absent(),
-    this.phoneNumber = const Value.absent(),
-  }) : name = Value(name);
+  }) : name = Value(name),
+       floor = Value(floor),
+       role = Value(role);
   static Insertable<User> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -1181,9 +1182,9 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<int>? apartmentNumber,
     Expression<String>? role,
     Expression<double>? balance,
+    Expression<String>? phoneNumber,
     Expression<String>? accessCode,
     Expression<bool>? isBlocked,
-    Expression<String>? phoneNumber,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1192,22 +1193,22 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (apartmentNumber != null) 'apartment_number': apartmentNumber,
       if (role != null) 'role': role,
       if (balance != null) 'balance': balance,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
       if (accessCode != null) 'access_code': accessCode,
       if (isBlocked != null) 'is_blocked': isBlocked,
-      if (phoneNumber != null) 'phone_number': phoneNumber,
     });
   }
 
   UsersCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
-    Value<int?>? floor,
+    Value<int>? floor,
     Value<int?>? apartmentNumber,
     Value<String>? role,
     Value<double>? balance,
+    Value<String?>? phoneNumber,
     Value<String?>? accessCode,
     Value<bool>? isBlocked,
-    Value<String?>? phoneNumber,
   }) {
     return UsersCompanion(
       id: id ?? this.id,
@@ -1216,9 +1217,9 @@ class UsersCompanion extends UpdateCompanion<User> {
       apartmentNumber: apartmentNumber ?? this.apartmentNumber,
       role: role ?? this.role,
       balance: balance ?? this.balance,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       accessCode: accessCode ?? this.accessCode,
       isBlocked: isBlocked ?? this.isBlocked,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 
@@ -1243,14 +1244,14 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (balance.present) {
       map['balance'] = Variable<double>(balance.value);
     }
+    if (phoneNumber.present) {
+      map['phone_number'] = Variable<String>(phoneNumber.value);
+    }
     if (accessCode.present) {
       map['access_code'] = Variable<String>(accessCode.value);
     }
     if (isBlocked.present) {
       map['is_blocked'] = Variable<bool>(isBlocked.value);
-    }
-    if (phoneNumber.present) {
-      map['phone_number'] = Variable<String>(phoneNumber.value);
     }
     return map;
   }
@@ -1264,9 +1265,9 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('apartmentNumber: $apartmentNumber, ')
           ..write('role: $role, ')
           ..write('balance: $balance, ')
+          ..write('phoneNumber: $phoneNumber, ')
           ..write('accessCode: $accessCode, ')
-          ..write('isBlocked: $isBlocked, ')
-          ..write('phoneNumber: $phoneNumber')
+          ..write('isBlocked: $isBlocked')
           ..write(')'))
         .toString();
   }
@@ -2298,25 +2299,25 @@ typedef $$UsersTableCreateCompanionBuilder =
     UsersCompanion Function({
       Value<int> id,
       required String name,
-      Value<int?> floor,
+      required int floor,
       Value<int?> apartmentNumber,
-      Value<String> role,
+      required String role,
       Value<double> balance,
+      Value<String?> phoneNumber,
       Value<String?> accessCode,
       Value<bool> isBlocked,
-      Value<String?> phoneNumber,
     });
 typedef $$UsersTableUpdateCompanionBuilder =
     UsersCompanion Function({
       Value<int> id,
       Value<String> name,
-      Value<int?> floor,
+      Value<int> floor,
       Value<int?> apartmentNumber,
       Value<String> role,
       Value<double> balance,
+      Value<String?> phoneNumber,
       Value<String?> accessCode,
       Value<bool> isBlocked,
-      Value<String?> phoneNumber,
     });
 
 final class $$UsersTableReferences
@@ -2380,6 +2381,11 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get accessCode => $composableBuilder(
     column: $table.accessCode,
     builder: (column) => ColumnFilters(column),
@@ -2387,11 +2393,6 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<bool> get isBlocked => $composableBuilder(
     column: $table.isBlocked,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2460,6 +2461,11 @@ class $$UsersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get accessCode => $composableBuilder(
     column: $table.accessCode,
     builder: (column) => ColumnOrderings(column),
@@ -2467,11 +2473,6 @@ class $$UsersTableOrderingComposer
 
   ColumnOrderings<bool> get isBlocked => $composableBuilder(
     column: $table.isBlocked,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -2505,6 +2506,11 @@ class $$UsersTableAnnotationComposer
   GeneratedColumn<double> get balance =>
       $composableBuilder(column: $table.balance, builder: (column) => column);
 
+  GeneratedColumn<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get accessCode => $composableBuilder(
     column: $table.accessCode,
     builder: (column) => column,
@@ -2512,11 +2518,6 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<bool> get isBlocked =>
       $composableBuilder(column: $table.isBlocked, builder: (column) => column);
-
-  GeneratedColumn<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
-    builder: (column) => column,
-  );
 
   Expression<T> transactionsRefs<T extends Object>(
     Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
@@ -2574,13 +2575,13 @@ class $$UsersTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<int?> floor = const Value.absent(),
+                Value<int> floor = const Value.absent(),
                 Value<int?> apartmentNumber = const Value.absent(),
                 Value<String> role = const Value.absent(),
                 Value<double> balance = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
                 Value<String?> accessCode = const Value.absent(),
                 Value<bool> isBlocked = const Value.absent(),
-                Value<String?> phoneNumber = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
                 name: name,
@@ -2588,21 +2589,21 @@ class $$UsersTableTableManager
                 apartmentNumber: apartmentNumber,
                 role: role,
                 balance: balance,
+                phoneNumber: phoneNumber,
                 accessCode: accessCode,
                 isBlocked: isBlocked,
-                phoneNumber: phoneNumber,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
-                Value<int?> floor = const Value.absent(),
+                required int floor,
                 Value<int?> apartmentNumber = const Value.absent(),
-                Value<String> role = const Value.absent(),
+                required String role,
                 Value<double> balance = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
                 Value<String?> accessCode = const Value.absent(),
                 Value<bool> isBlocked = const Value.absent(),
-                Value<String?> phoneNumber = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
                 name: name,
@@ -2610,9 +2611,9 @@ class $$UsersTableTableManager
                 apartmentNumber: apartmentNumber,
                 role: role,
                 balance: balance,
+                phoneNumber: phoneNumber,
                 accessCode: accessCode,
                 isBlocked: isBlocked,
-                phoneNumber: phoneNumber,
               ),
           withReferenceMapper: (p0) => p0
               .map(
