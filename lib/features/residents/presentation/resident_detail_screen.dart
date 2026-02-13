@@ -121,7 +121,7 @@ class ResidentDetailScreen extends ConsumerWidget {
         icon: const Icon(Icons.add, color: AppTheme.darkNavy),
         label: const Text("ENCAISSEMENT", style: TextStyle(color: AppTheme.darkNavy, fontWeight: FontWeight.bold)),
       ),
-      body: StreamBuilder<User>(
+      body: StreamBuilder<User?>(
         stream: (db.select(db.users)..where((t) => t.id.equals(userId))).watchSingleOrNull(),
         builder: (context, snapshot) {
           if (snapshot.hasError) return Center(child: Text("Erreur: ${snapshot.error}", style: const TextStyle(color: Colors.red)));

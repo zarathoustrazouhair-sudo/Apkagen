@@ -1881,12 +1881,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   }
 }
 
-class $ProvidersTable extends Providers
-    with TableInfo<$ProvidersTable, Provider> {
+class $ServiceProvidersTable extends ServiceProviders
+    with TableInfo<$ServiceProvidersTable, ServiceProvider> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ProvidersTable(this.attachedDatabase, [this._alias]);
+  $ServiceProvidersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -1935,10 +1935,10 @@ class $ProvidersTable extends Providers
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'providers';
+  static const String $name = 'service_providers';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Provider> instance, {
+    Insertable<ServiceProvider> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1977,9 +1977,9 @@ class $ProvidersTable extends Providers
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Provider map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ServiceProvider map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Provider(
+    return ServiceProvider(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -2000,17 +2000,17 @@ class $ProvidersTable extends Providers
   }
 
   @override
-  $ProvidersTable createAlias(String alias) {
-    return $ProvidersTable(attachedDatabase, alias);
+  $ServiceProvidersTable createAlias(String alias) {
+    return $ServiceProvidersTable(attachedDatabase, alias);
   }
 }
 
-class Provider extends DataClass implements Insertable<Provider> {
+class ServiceProvider extends DataClass implements Insertable<ServiceProvider> {
   final int id;
   final String name;
   final String serviceType;
   final String? phone;
-  const Provider({
+  const ServiceProvider({
     required this.id,
     required this.name,
     required this.serviceType,
@@ -2028,8 +2028,8 @@ class Provider extends DataClass implements Insertable<Provider> {
     return map;
   }
 
-  ProvidersCompanion toCompanion(bool nullToAbsent) {
-    return ProvidersCompanion(
+  ServiceProvidersCompanion toCompanion(bool nullToAbsent) {
+    return ServiceProvidersCompanion(
       id: Value(id),
       name: Value(name),
       serviceType: Value(serviceType),
@@ -2039,12 +2039,12 @@ class Provider extends DataClass implements Insertable<Provider> {
     );
   }
 
-  factory Provider.fromJson(
+  factory ServiceProvider.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Provider(
+    return ServiceProvider(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       serviceType: serializer.fromJson<String>(json['serviceType']),
@@ -2062,19 +2062,19 @@ class Provider extends DataClass implements Insertable<Provider> {
     };
   }
 
-  Provider copyWith({
+  ServiceProvider copyWith({
     int? id,
     String? name,
     String? serviceType,
     Value<String?> phone = const Value.absent(),
-  }) => Provider(
+  }) => ServiceProvider(
     id: id ?? this.id,
     name: name ?? this.name,
     serviceType: serviceType ?? this.serviceType,
     phone: phone.present ? phone.value : this.phone,
   );
-  Provider copyWithCompanion(ProvidersCompanion data) {
-    return Provider(
+  ServiceProvider copyWithCompanion(ServiceProvidersCompanion data) {
+    return ServiceProvider(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       serviceType: data.serviceType.present
@@ -2086,7 +2086,7 @@ class Provider extends DataClass implements Insertable<Provider> {
 
   @override
   String toString() {
-    return (StringBuffer('Provider(')
+    return (StringBuffer('ServiceProvider(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('serviceType: $serviceType, ')
@@ -2100,32 +2100,32 @@ class Provider extends DataClass implements Insertable<Provider> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Provider &&
+      (other is ServiceProvider &&
           other.id == this.id &&
           other.name == this.name &&
           other.serviceType == this.serviceType &&
           other.phone == this.phone);
 }
 
-class ProvidersCompanion extends UpdateCompanion<Provider> {
+class ServiceProvidersCompanion extends UpdateCompanion<ServiceProvider> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> serviceType;
   final Value<String?> phone;
-  const ProvidersCompanion({
+  const ServiceProvidersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.serviceType = const Value.absent(),
     this.phone = const Value.absent(),
   });
-  ProvidersCompanion.insert({
+  ServiceProvidersCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String serviceType,
     this.phone = const Value.absent(),
   }) : name = Value(name),
        serviceType = Value(serviceType);
-  static Insertable<Provider> custom({
+  static Insertable<ServiceProvider> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? serviceType,
@@ -2139,13 +2139,13 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
     });
   }
 
-  ProvidersCompanion copyWith({
+  ServiceProvidersCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
     Value<String>? serviceType,
     Value<String?>? phone,
   }) {
-    return ProvidersCompanion(
+    return ServiceProvidersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       serviceType: serviceType ?? this.serviceType,
@@ -2173,7 +2173,7 @@ class ProvidersCompanion extends UpdateCompanion<Provider> {
 
   @override
   String toString() {
-    return (StringBuffer('ProvidersCompanion(')
+    return (StringBuffer('ServiceProvidersCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('serviceType: $serviceType, ')
@@ -2191,7 +2191,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UsersTable users = $UsersTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
-  late final $ProvidersTable providers = $ProvidersTable(this);
+  late final $ServiceProvidersTable serviceProviders = $ServiceProvidersTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2202,7 +2204,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     users,
     appSettings,
     transactions,
-    providers,
+    serviceProviders,
   ];
 }
 
@@ -3440,24 +3442,24 @@ typedef $$TransactionsTableProcessedTableManager =
       Transaction,
       PrefetchHooks Function({bool userId})
     >;
-typedef $$ProvidersTableCreateCompanionBuilder =
-    ProvidersCompanion Function({
+typedef $$ServiceProvidersTableCreateCompanionBuilder =
+    ServiceProvidersCompanion Function({
       Value<int> id,
       required String name,
       required String serviceType,
       Value<String?> phone,
     });
-typedef $$ProvidersTableUpdateCompanionBuilder =
-    ProvidersCompanion Function({
+typedef $$ServiceProvidersTableUpdateCompanionBuilder =
+    ServiceProvidersCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<String> serviceType,
       Value<String?> phone,
     });
 
-class $$ProvidersTableFilterComposer
-    extends Composer<_$AppDatabase, $ProvidersTable> {
-  $$ProvidersTableFilterComposer({
+class $$ServiceProvidersTableFilterComposer
+    extends Composer<_$AppDatabase, $ServiceProvidersTable> {
+  $$ServiceProvidersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3485,9 +3487,9 @@ class $$ProvidersTableFilterComposer
   );
 }
 
-class $$ProvidersTableOrderingComposer
-    extends Composer<_$AppDatabase, $ProvidersTable> {
-  $$ProvidersTableOrderingComposer({
+class $$ServiceProvidersTableOrderingComposer
+    extends Composer<_$AppDatabase, $ServiceProvidersTable> {
+  $$ServiceProvidersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3515,9 +3517,9 @@ class $$ProvidersTableOrderingComposer
   );
 }
 
-class $$ProvidersTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ProvidersTable> {
-  $$ProvidersTableAnnotationComposer({
+class $$ServiceProvidersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ServiceProvidersTable> {
+  $$ServiceProvidersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -3539,39 +3541,48 @@ class $$ProvidersTableAnnotationComposer
       $composableBuilder(column: $table.phone, builder: (column) => column);
 }
 
-class $$ProvidersTableTableManager
+class $$ServiceProvidersTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $ProvidersTable,
-          Provider,
-          $$ProvidersTableFilterComposer,
-          $$ProvidersTableOrderingComposer,
-          $$ProvidersTableAnnotationComposer,
-          $$ProvidersTableCreateCompanionBuilder,
-          $$ProvidersTableUpdateCompanionBuilder,
-          (Provider, BaseReferences<_$AppDatabase, $ProvidersTable, Provider>),
-          Provider,
+          $ServiceProvidersTable,
+          ServiceProvider,
+          $$ServiceProvidersTableFilterComposer,
+          $$ServiceProvidersTableOrderingComposer,
+          $$ServiceProvidersTableAnnotationComposer,
+          $$ServiceProvidersTableCreateCompanionBuilder,
+          $$ServiceProvidersTableUpdateCompanionBuilder,
+          (
+            ServiceProvider,
+            BaseReferences<
+              _$AppDatabase,
+              $ServiceProvidersTable,
+              ServiceProvider
+            >,
+          ),
+          ServiceProvider,
           PrefetchHooks Function()
         > {
-  $$ProvidersTableTableManager(_$AppDatabase db, $ProvidersTable table)
-    : super(
+  $$ServiceProvidersTableTableManager(
+    _$AppDatabase db,
+    $ServiceProvidersTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ProvidersTableFilterComposer($db: db, $table: table),
+              $$ServiceProvidersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ProvidersTableOrderingComposer($db: db, $table: table),
+              $$ServiceProvidersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ProvidersTableAnnotationComposer($db: db, $table: table),
+              $$ServiceProvidersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> serviceType = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
-              }) => ProvidersCompanion(
+              }) => ServiceProvidersCompanion(
                 id: id,
                 name: name,
                 serviceType: serviceType,
@@ -3583,7 +3594,7 @@ class $$ProvidersTableTableManager
                 required String name,
                 required String serviceType,
                 Value<String?> phone = const Value.absent(),
-              }) => ProvidersCompanion.insert(
+              }) => ServiceProvidersCompanion.insert(
                 id: id,
                 name: name,
                 serviceType: serviceType,
@@ -3597,18 +3608,21 @@ class $$ProvidersTableTableManager
       );
 }
 
-typedef $$ProvidersTableProcessedTableManager =
+typedef $$ServiceProvidersTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $ProvidersTable,
-      Provider,
-      $$ProvidersTableFilterComposer,
-      $$ProvidersTableOrderingComposer,
-      $$ProvidersTableAnnotationComposer,
-      $$ProvidersTableCreateCompanionBuilder,
-      $$ProvidersTableUpdateCompanionBuilder,
-      (Provider, BaseReferences<_$AppDatabase, $ProvidersTable, Provider>),
-      Provider,
+      $ServiceProvidersTable,
+      ServiceProvider,
+      $$ServiceProvidersTableFilterComposer,
+      $$ServiceProvidersTableOrderingComposer,
+      $$ServiceProvidersTableAnnotationComposer,
+      $$ServiceProvidersTableCreateCompanionBuilder,
+      $$ServiceProvidersTableUpdateCompanionBuilder,
+      (
+        ServiceProvider,
+        BaseReferences<_$AppDatabase, $ServiceProvidersTable, ServiceProvider>,
+      ),
+      ServiceProvider,
       PrefetchHooks Function()
     >;
 
@@ -3625,8 +3639,8 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
-  $$ProvidersTableTableManager get providers =>
-      $$ProvidersTableTableManager(_db, _db.providers);
+  $$ServiceProvidersTableTableManager get serviceProviders =>
+      $$ServiceProvidersTableTableManager(_db, _db.serviceProviders);
 }
 
 // **************************************************************************

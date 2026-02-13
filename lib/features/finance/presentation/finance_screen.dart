@@ -31,11 +31,12 @@ class FinanceScreen extends ConsumerWidget {
               final tx = transactions[index];
               final isIncome = tx.type == 'income';
 
-              return LuxuryCard(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: LuxuryCard(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
                     Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, color: isIncome ? Colors.green : Colors.red),
                     const SizedBox(width: 16),
                     Expanded(
@@ -50,8 +51,9 @@ class FinanceScreen extends ConsumerWidget {
                     Text(
                       "${isIncome ? '+' : '-'}${tx.amount.toStringAsFixed(2)} DH",
                       style: TextStyle(color: isIncome ? const Color(0xFF00E5FF) : AppTheme.errorRed, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

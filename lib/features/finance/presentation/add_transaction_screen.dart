@@ -20,7 +20,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _amountController = TextEditingController(text: "250");
   final _descriptionController = TextEditingController(text: "Cotisation Mensuelle");
   User? _selectedUser;
-  Provider? _selectedProvider;
+  ServiceProvider? _selectedProvider;
   String _transactionType = 'income'; // 'income' or 'expense'
   String _selectedMode = "Espèces";
   bool _isLoading = false;
@@ -114,12 +114,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: StreamBuilder<List<Provider>>(
-                          stream: db.select(db.providers).watch(),
+                        child: StreamBuilder<List<ServiceProvider>>(
+                          stream: db.select(db.serviceProviders).watch(),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) return const CircularProgressIndicator();
                             final providers = snapshot.data!;
-                            return DropdownButtonFormField<Provider>(
+                            return DropdownButtonFormField<ServiceProvider>(
                               dropdownColor: AppTheme.darkNavy,
                               value: _selectedProvider,
                               items: providers.map((prov) {
@@ -290,8 +290,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ElevatedButton(
             onPressed: () async {
               if (nameCtrl.text.isNotEmpty && typeCtrl.text.isNotEmpty) {
-                await db.into(db.providers).insert(
-                  ProvidersCompanion.insert(name: nameCtrl.text, serviceType: typeCtrl.text),
+                await db.into(db.serviceProviders).insert(
+                  ServiceProvidersCompanion.insert(name: nameCtrl.text, serviceType: typeCtrl.text),
                 );
                 Navigator.pop(ctx);
               }

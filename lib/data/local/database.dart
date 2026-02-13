@@ -22,7 +22,7 @@ class Transactions extends Table {
   TextColumn get type => text()(); // 'income', 'expense'
 }
 
-class Providers extends Table {
+class ServiceProviders extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get serviceType => text()(); // 'Plomberie', 'Electricité', 'Autre'
@@ -42,7 +42,7 @@ class Users extends Table {
   BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions, Providers])
+@DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions, ServiceProviders])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -67,7 +67,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(users, users.isBlocked);
       }
       if (from < 5) {
-        await m.createTable(providers);
+        await m.createTable(serviceProviders);
       }
     },
     beforeOpen: (details) async {
@@ -106,9 +106,9 @@ class AppDatabase extends _$AppDatabase {
           UsersCompanion.insert(
             id: Value(resident.id), // Force ID for consistency
             name: resident.name,
-            floor: Value(resident.floor),
+            floor: resident.floor, // Required int
             apartmentNumber: Value(resident.aptNumber),
-            role: Value(resident.role),
+            role: resident.role, // Required String
             balance: Value(randomBalance),
             phoneNumber: const Value("0600000000"),
           ),
@@ -123,7 +123,8 @@ class AppDatabase extends _$AppDatabase {
         UsersCompanion.insert(
           id: const Value(100),
           name: kAdjointName,
-          role: const Value('adjoint'),
+          floor: 0,
+          role: 'adjoint',
           balance: const Value(0.0),
           phoneNumber: const Value("0600000000"),
         ),
@@ -135,7 +136,8 @@ class AppDatabase extends _$AppDatabase {
         UsersCompanion.insert(
           id: const Value(101),
           name: "Gardien Principal",
-          role: const Value('concierge'),
+          floor: 0,
+          role: 'concierge',
           balance: const Value(0.0),
           phoneNumber: const Value("0600000000"),
         ),

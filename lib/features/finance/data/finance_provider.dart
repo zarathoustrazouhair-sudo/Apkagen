@@ -9,6 +9,7 @@ final transactionsProvider = StreamProvider<List<Transaction>>((ref) {
 });
 
 // Derived: Total Balance
+// Explicitly using Riverpod's Provider to avoid conflict if any (though renaming Providers table solved the main one)
 final totalBalanceProvider = Provider<AsyncValue<double>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
 
@@ -27,8 +28,7 @@ final totalBalanceProvider = Provider<AsyncValue<double>>((ref) {
   });
 });
 
-// Derived: Survival (Assuming monthly burn rate of 10,000 DH for example)
-// In a real app, this would be calculated from average expenses over time.
+// Derived: Survival
 const kMonthlyBurnRate = 10000.0;
 
 final monthlySurvivalProvider = Provider<AsyncValue<double>>((ref) {
@@ -40,8 +40,7 @@ final monthlySurvivalProvider = Provider<AsyncValue<double>>((ref) {
   });
 });
 
-// Derived: Recovery Stats (Paid vs Unpaid Residents)
-// We need to access users for this
+// Derived: Recovery Stats
 final recoveryStatsProvider = FutureProvider<Map<String, double>>((ref) async {
   final db = ref.watch(appDatabaseProvider);
   final residents = await (db.select(db.users)..where((t) => t.role.equals('resident'))).get();
@@ -61,26 +60,21 @@ final recoveryStatsProvider = FutureProvider<Map<String, double>>((ref) async {
   };
 });
 
-// Derived: Cashflow History (Last 6 Months)
-// Returns List of Monthly Net Income (Income - Expense)
-// Index 0 is oldest month, Index 5 is current month
+// Derived: Cashflow History
 final cashflowHistoryProvider = Provider<AsyncValue<List<double>>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
 
   return transactionsAsync.whenData((transactions) {
     final now = DateTime.now();
-    // Initialize last 6 months buckets
     List<double> monthlyNet = List.filled(6, 0.0);
 
     for (var t in transactions) {
-      // Calculate month difference
-      // If transaction is 2 months ago, index is 5-2 = 3
       final diffInMonths = (now.year - t.date.year) * 12 + now.month - t.date.month;
 
       if (diffInMonths >= 0 && diffInMonths < 6) {
         final index = 5 - diffInMonths;
         if (t.type == 'income') {
-          monthlyNet[index] += t.amount;
+          monthlyNet[index] += t.amount; // t.amount is double, list is double
         } else {
           monthlyNet[index] -= t.amount;
         }
