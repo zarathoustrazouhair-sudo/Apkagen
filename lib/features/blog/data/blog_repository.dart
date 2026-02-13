@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
-import 'package:residence_lamandier_b/features/blog/data/post_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:residence_lamandier_b/features/blog/data/post_entity.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
+import 'package:residence_lamandier_b/core/sync/mutation_queue_entity.dart';
 
 part 'blog_repository.g.dart';
 
@@ -16,7 +17,7 @@ BlogRepository blogRepository(BlogRepositoryRef ref) {
   try {
     return BlogRepository(Supabase.instance.client, db);
   } catch (e) {
-    // If Supabase not initialized, mock it
+    // If Supabase not initialized, mock it with null client
     return BlogRepository(null, db);
   }
 }
@@ -24,25 +25,27 @@ BlogRepository blogRepository(BlogRepositoryRef ref) {
 class BlogRepository {
   final SupabaseClient? _client;
   final AppDatabase _db;
-  final List<PostEntity> _localPosts = []; // In-memory fallback
+  // Simple in-memory cache for immediate UX feedback
+  final List<PostEntity> _localPosts = [];
 
   BlogRepository(this._client, this._db);
 
   Future<List<PostEntity>> getPosts({required UserRole userRole}) async {
-    // STRICT SECURITY: Concierge CANNOT see the blog
-    if (userRole == UserRole.concierge) {
-      throw Exception("ACCESS_DENIED: Concierge cannot access resident blog.");
-    }
+    // STRICT SECURITY: Concierge CANNOT see the blog (as per previous logic, but TEP says "Lecture" allowed for Concierge?)
+    // TEP UPDATE: "Concierge: Lecture | Résident: Lecture/Post"
+    // So Concierge CAN see posts. Removing previous restriction or adjusting.
+    // TEP Table says: Concierge -> Lecture.
 
     try {
       if (_client == null) throw Exception("Offline Mode");
 
       final response = await _client!
           .from('blog_posts')
-          .select('*, profiles(first_name, last_name, role)') // Join to get author details
+          .select('*, profiles(first_name, last_name, role)')
           .order('created_at', ascending: false);
 
-      final remotePosts = (response as List).map((data) {
+      final List<dynamic> dataList = response as List<dynamic>;
+      final remotePosts = dataList.map((data) {
         final profile = data['profiles'] ?? {};
         final authorName = "${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''} (${profile['role'] ?? '?'})";
 
@@ -51,11 +54,12 @@ class BlogRepository {
           title: data['title'] ?? '',
           content: data['content'] ?? '',
           author: authorName.trim(),
-          imageUrl: data['image_url'],
-          createdAt: DateTime.parse(data['created_at']),
+          imageUrl: data['image_url'], // Nullable
+          createdAt: DateTime.tryParse(data['created_at'].toString()) ?? DateTime.now(),
         );
       }).toList();
 
+      // Merge local pending posts on top
       return [..._localPosts, ...remotePosts];
 
     } catch (e) {
@@ -70,23 +74,32 @@ class BlogRepository {
     required UserRole userRole,
     File? imageFile,
   }) async {
+    // Permission Check: Syndic, Adjoint, Resident can post. Concierge? TEP says "Lecture".
     if (userRole == UserRole.concierge) {
       throw Exception("ACCESS_DENIED: Concierge cannot create posts.");
     }
 
     String? imageUrl;
+    String? localImagePath = imageFile?.path;
 
     try {
       if (_client == null) throw Exception("Offline Mode");
 
       if (imageFile != null) {
-        final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        await _client!.storage.from('blog_images').upload(
-          fileName,
-          imageFile,
-          fileOptions: const FileOptions(contentType: 'image/jpeg'),
-        );
-        imageUrl = _client!.storage.from('blog_images').getPublicUrl(fileName);
+        try {
+          final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          await _client!.storage.from('blog_images').upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+          );
+          imageUrl = _client!.storage.from('blog_images').getPublicUrl(fileName);
+        } catch (uploadError) {
+          print("BlogRepository: Upload failed ($uploadError). Using local path as fallback.");
+          // We continue to insert the post, but use the local path for immediate display?
+          // No, Supabase needs a URL. If upload fails, we must treat the whole operation as offline/pending.
+          throw Exception("Upload Failed");
+        }
       }
 
       await _client!.from('blog_posts').insert({
@@ -97,25 +110,26 @@ class BlogRepository {
       });
 
     } catch (e) {
-      // Offline fallback: Add to local memory so user sees it "worked"
       print("BlogRepository: Backend error ($e). Saving locally and queuing.");
 
       // 1. Memory Cache (Immediate UX)
+      // Use local file path as imageUrl for display in this session
       final newPost = PostEntity(
         id: "local_${DateTime.now().millisecondsSinceEpoch}",
         title: title,
         content: content,
         author: "Moi (En attente)",
-        imageUrl: null,
+        imageUrl: localImagePath, // Display local image
         createdAt: DateTime.now(),
       );
       _localPosts.insert(0, newPost);
 
       // 2. Persistent Mutation Queue (Real Offline Support)
+      // We serialize the intention. A sync service would pick this up later.
       final payload = {
         'title': title,
         'content': content,
-        'image_path': imageFile?.path, // Store path, sync service will need to read it
+        'image_path': localImagePath,
         'created_at': DateTime.now().toIso8601String(),
       };
 

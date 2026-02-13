@@ -5,7 +5,8 @@ import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:drift/drift.dart' as drift;
 
 class CockpitActiveWidgets extends ConsumerWidget {
-  const CockpitActiveWidgets({super.key});
+  final bool hideFinance;
+  const CockpitActiveWidgets({super.key, this.hideFinance = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,63 +14,64 @@ class CockpitActiveWidgets extends ConsumerWidget {
 
     return Column(
       children: [
-        // 1. SURVIVAL EMOJI ROW
-        StreamBuilder<List<Transaction>>(
-          stream: db.select(db.transactions).watch(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return const SizedBox.shrink();
+        // 1. SURVIVAL EMOJI ROW (FINANCE) - HIDDEN IF hideFinance
+        if (!hideFinance)
+          StreamBuilder<List<Transaction>>(
+            stream: db.select(db.transactions).watch(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
 
-            final txs = snapshot.data!;
-            double cash = 0.0;
-            for (var tx in txs) {
-              if (tx.type == 'income') cash += tx.amount;
-              if (tx.type == 'expense') cash -= tx.amount;
-            }
+              final txs = snapshot.data!;
+              double cash = 0.0;
+              for (var tx in txs) {
+                if (tx.type == 'income') cash += tx.amount;
+                if (tx.type == 'expense') cash -= tx.amount;
+              }
 
-            String emoji = "😐";
-            String status = "STABLE";
-            Color color = Colors.orange;
+              String emoji = "😐";
+              String status = "STABLE";
+              Color color = Colors.orange;
 
-            if (cash > 50000) {
-              emoji = "🤑";
-              status = "RICHE";
-              color = Colors.greenAccent;
-            } else if (cash > 10000) {
-              emoji = "😎";
-              status = "CONFORT";
-              color = Colors.green;
-            } else if (cash < 0) {
-              emoji = "💀";
-              status = "CRITIQUE";
-              color = Colors.red;
-            }
+              if (cash > 50000) {
+                emoji = "🤑";
+                status = "RICHE";
+                color = Colors.greenAccent;
+              } else if (cash > 10000) {
+                emoji = "😎";
+                status = "CONFORT";
+                color = Colors.green;
+              } else if (cash < 0) {
+                emoji = "💀";
+                status = "CRITIQUE";
+                color = Colors.red;
+              }
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppPalettes.offBlack.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.5)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("SANTÉ FINANCIÈRE", style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.7), fontSize: 10)),
-                      Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ],
-                  ),
-                  Text(emoji, style: const TextStyle(fontSize: 32)),
-                  Text("${cash.toStringAsFixed(0)} DH", style: TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
-                ],
-              ),
-            );
-          },
-        ),
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppPalettes.offBlack.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withOpacity(0.5)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("SANTÉ FINANCIÈRE", style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.7), fontSize: 10)),
+                        Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                    Text(emoji, style: const TextStyle(fontSize: 32)),
+                    Text("${cash.toStringAsFixed(0)} DH", style: TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+              );
+            },
+          ),
 
-        const SizedBox(height: 16),
+        if (!hideFinance) const SizedBox(height: 16),
 
         // 2. INCIDENTS & TASKS
         StreamBuilder<List<Task>>(

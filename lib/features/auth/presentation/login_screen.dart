@@ -19,8 +19,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  // Syndic Fields
+  // Syndic & Adjoint Fields
   final _adminPassController = TextEditingController();
+  final _adjointPassController = TextEditingController();
+
+  // Concierge Fields
+  final _conciergeCodeController = TextEditingController();
 
   // Resident Fields
   int _selectedFloor = 1;
@@ -54,13 +58,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text("Version 1.0.1", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                    const Text("Version 2.0.0 (Hierarchy Restored)", style: TextStyle(color: Colors.grey, fontSize: 10)),
                   ],
                 ),
               ),
               const SizedBox(height: 40),
 
-              // 1. SYNDIC SECTION
+              // 1. SYNDIC SECTION (Full Access)
               LuxuryCard(
                 child: ExpansionTile(
                   title: const Text("SYNDIC", style: TextStyle(color: AppTheme.gold, fontWeight: FontWeight.bold, fontSize: 18)),
@@ -91,34 +95,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 16),
 
-              // 2. ADJOINT (Simplified, same logic for now but role ADJOINT)
+              // 2. ADJOINT SECTION (Limited Admin)
                LuxuryCard(
-                child: ListTile(
-                  title: const Text("ADJOINT", style: TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold)),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.gold, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Accès Adjoint via Syndic pour démo.")));
-                  },
+                child: ExpansionTile(
+                  title: const Text("ADJOINT", style: TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+                  iconColor: AppTheme.gold,
+                  collapsedIconColor: AppTheme.offWhite,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          LuxuryTextField(
+                            label: "MOT DE PASSE ADJOINT",
+                            controller: _adjointPassController,
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 16),
+                          LuxuryButton(
+                            label: "CONNEXION (ADJOINT)",
+                            isLoading: _isProcessing,
+                            onPressed: () => _loginAdjoint(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // 3. CONCIERGE
+              // 3. CONCIERGE SECTION (Field Access)
               LuxuryCard(
-                child: ListTile(
-                  title: const Text("CONCIERGE", style: TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold)),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.gold, size: 16),
-                  onTap: () {
-                     ref.read(userRoleProvider.notifier).state = UserRole.concierge;
-                     context.go('/concierge');
-                  },
+                 child: ExpansionTile(
+                  title: const Text("CONCIERGE", style: TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+                  iconColor: AppTheme.gold,
+                  collapsedIconColor: AppTheme.offWhite,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          LuxuryTextField(
+                            label: "CODE D'ACCÈS",
+                            controller: _conciergeCodeController,
+                            obscureText: true,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                          LuxuryButton(
+                            label: "CONNEXION (CONCIERGE)",
+                            isLoading: _isProcessing,
+                            onPressed: () => _loginConcierge(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // 4. RÉSIDENT SECTION
+              // 4. RÉSIDENT SECTION (Consultation)
               LuxuryCard(
                 child: ExpansionTile(
                   title: const Text("RÉSIDENT", style: TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
@@ -221,6 +261,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Future<void> _loginAdjoint() async {
+     setState(() => _isProcessing = true);
+     await Future.delayed(const Duration(milliseconds: 500)); // Mock API delay
+     // Simple check for demo/MVP
+     if (_adjointPassController.text == "adjoint" || _adjointPassController.text == "1234") {
+       ref.read(userRoleProvider.notifier).state = UserRole.adjoint;
+       if (mounted) context.go('/syndic'); // Adjoint uses same shell but limited perms
+     } else {
+       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mot de passe Adjoint incorrect")));
+     }
+     if (mounted) setState(() => _isProcessing = false);
+  }
+
+  Future<void> _loginConcierge() async {
+     setState(() => _isProcessing = true);
+     await Future.delayed(const Duration(milliseconds: 500));
+     if (_conciergeCodeController.text == "0000" || _conciergeCodeController.text == "9999") {
+        ref.read(userRoleProvider.notifier).state = UserRole.concierge;
+        if (mounted) context.go('/concierge');
+     } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Code Concierge incorrect")));
+     }
+     if (mounted) setState(() => _isProcessing = false);
   }
 
   Future<void> _loginResident() async {
