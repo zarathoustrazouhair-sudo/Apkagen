@@ -104,8 +104,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       return;
     }
 
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
+    final amountInput = double.tryParse(_amountController.text);
+    if (amountInput == null || amountInput <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide.')));
       return;
     }
@@ -113,45 +113,62 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final oldBalance = _selectedUser!.balance;
-      final newBalance = oldBalance + amount;
+      final txData = await db.transaction<Map<String, dynamic>>(() async {
+        // 1. Re-fetch user to get latest balance (Defensive)
+        final freshUser = await (db.select(db.users)..where((t) => t.id.equals(_selectedUser!.id))).getSingle();
+        final currentBalance = freshUser.balance;
+        final newBalance = currentBalance + amountInput; // Adding credit reduces debt or increases positive balance
 
-      // 1. Insert Transaction Record
-      final txId = await db.into(db.transactions).insert(
-        TransactionsCompanion.insert(
-          amount: amount,
-          date: DateTime.now(),
-          description: _descriptionController.text.isNotEmpty ? _descriptionController.text : "Paiement",
-          userId: drift.Value(_selectedUser!.id),
-          type: 'income',
-        ),
-      );
+        // 2. Insert Transaction Record
+        final txId = await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            amount: amountInput,
+            date: DateTime.now(),
+            description: _descriptionController.text.isNotEmpty ? _descriptionController.text : "Paiement",
+            userId: drift.Value(freshUser.id),
+            type: 'income',
+          ),
+        );
 
-      // 2. Update User Balance
-      await (db.update(db.users)..where((t) => t.id.equals(_selectedUser!.id))).write(
-        UsersCompanion(balance: drift.Value(newBalance)),
-      );
+        // 3. Update User Balance (Atomic Update)
+        await (db.update(db.users)..where((t) => t.id.equals(freshUser.id))).write(
+          UsersCompanion(balance: drift.Value(newBalance)),
+        );
+
+        return {
+          'txId': txId,
+          'oldBalance': currentBalance,
+          'newBalance': newBalance,
+          'user': freshUser,
+        };
+      });
 
       if (mounted) {
-        _showSuccessDialog(amount, newBalance, txId, oldBalance);
+        _showSuccessDialog(
+          amountInput,
+          txData['newBalance'],
+          txData['txId'],
+          txData['oldBalance'],
+          txData['user']
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur Critique Transaction: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessDialog(double amount, double newBalance, int txId, double oldBalance) {
+  void _showSuccessDialog(double amount, double newBalance, int txId, double oldBalance, User user) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.darkNavy,
         title: const Text("Paiement Enregistré", style: TextStyle(color: AppTheme.gold)),
-        content: const Text("La transaction a été enregistrée avec succès.", style: TextStyle(color: AppTheme.offWhite)),
+        content: const Text("La transaction a été sécurisée et enregistrée avec succès.", style: TextStyle(color: AppTheme.offWhite)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -165,8 +182,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               // Generate PDF
               PdfGeneratorService().generateReceipt(
                 transactionId: txId,
-                residentName: _selectedUser!.name,
-                lotNumber: _selectedUser!.apartmentNumber ?? 0,
+                residentName: user.name,
+                lotNumber: user.apartmentNumber ?? 0,
                 amount: amount,
                 mode: _selectedMode,
                 period: "${DateTime.now().month}/${DateTime.now().year}",
