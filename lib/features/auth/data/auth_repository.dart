@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
+import 'package:residence_lamandier_b/features/auth/domain/auth_failure.dart';
 
 part 'auth_repository.g.dart';
 
@@ -21,10 +22,13 @@ class AuthRepository {
         password: password,
       );
       if (response.user == null) {
-        throw Exception("Login failed: User is null");
+        throw const AuthFailure("Login failed: User is null");
       }
-    } catch (e) {
-      throw Exception("Login failed: ${e.toString()}");
+    } catch (e, stackTrace) {
+      Error.throwWithStackTrace(
+        AuthFailure("Login failed", e, stackTrace),
+        stackTrace,
+      );
     }
   }
 
