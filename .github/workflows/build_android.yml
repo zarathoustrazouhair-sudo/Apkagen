@@ -1,11 +1,9 @@
-name: Build Android APK (Rescue)
-
+name: Build Android APK
 on:
   push:
     branches: [ '**' ] # Run on all branches
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -14,18 +12,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
-      - name: 1. Checkout Code (v4 Fixed)
-        uses: actions/checkout@v4
-
-      - name: 2. Setup Java
-        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
       - uses: subosito/flutter-action@v2
-      - name: 3. Setup Flutter
-        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
@@ -33,14 +24,8 @@ jobs:
         run: |
           flutter clean
           flutter pub get
-      - name: 4. Get Date for Versioning
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d_%Hh%M')" >> $GITHUB_OUTPUT
 
-      - name: 5. Install Dependencies
-        run: flutter pub get
-
-      - name: 6. Build APK (Release Mode)
+      - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK
@@ -48,13 +33,3 @@ jobs:
         with:
           name: amandier-release-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk
-      - name: 7. Rename APK
-        run: |
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Amandier_RESCUE_${{ steps.date.outputs.date }}.apk
-
-      - name: 8. Upload Artifact (v4 Fixed)
-        uses: actions/upload-artifact@v4
-        with:
-          name: APK_Amandier_${{ steps.date.outputs.date }}
-          path: build/app/outputs/flutter-apk/Amandier_RESCUE_${{ steps.date.outputs.date }}.apk
-          retention-days: 5

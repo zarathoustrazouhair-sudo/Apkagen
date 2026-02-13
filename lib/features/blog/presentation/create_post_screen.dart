@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:residence_lamandier_b/core/theme/app_palettes.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_widgets.dart';
-import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart'; // Keep generic text field for inputs
+import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart';
 import 'package:residence_lamandier_b/features/blog/data/blog_repository.dart';
 import 'package:residence_lamandier_b/core/router/app_router.dart';
 
@@ -27,20 +29,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Compress Image (Max 1920x1080, 85%)
-      final compressedBytes = await FlutterImageCompress.compressWithFile(
+      final tempDir = await getTemporaryDirectory();
+      final targetPath = p.join(tempDir.path, "compressed_${DateTime.now().millisecondsSinceEpoch}.jpg");
+
+      // Compress Image (Max 1920x1080, 85%) and write directly to file
+      final compressedXFile = await FlutterImageCompress.compressAndGetFile(
         pickedFile.path,
+        targetPath,
         minWidth: 1920,
         minHeight: 1080,
         quality: 85,
       );
 
-      // In a real scenario, we'd save bytes to a temp file.
-      // For simplicity here, we just use the original file if compression succeeds in logic
-      // Ideally, write compressedBytes to a new File path.
-
       setState(() {
-        _imageFile = File(pickedFile.path);
+        if (compressedXFile != null) {
+          _imageFile = File(compressedXFile.path);
+        } else {
+          // Fallback to original if compression fails
+          _imageFile = File(pickedFile.path);
+        }
       });
     }
   }
@@ -129,8 +136,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               controller: _contentController,
               keyboardType: TextInputType.multiline,
             ),
-            // Note: Multiline height would be handled by LuxuryTextField internals or by wrapping.
-            // For now, assume it expands or use lines logic if exposed.
 
             const SizedBox(height: 8),
             Align(
