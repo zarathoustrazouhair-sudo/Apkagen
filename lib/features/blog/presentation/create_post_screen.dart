@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:residence_lamandier_b/core/theme/app_palettes.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_widgets.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart'; // Keep generic text field for inputs
@@ -27,18 +26,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Compress Image (Max 1920x1080, 85%)
-      final compressedBytes = await FlutterImageCompress.compressWithFile(
-        pickedFile.path,
-        minWidth: 1920,
-        minHeight: 1080,
-        quality: 85,
-      );
-
-      // In a real scenario, we'd save bytes to a temp file.
-      // For simplicity here, we just use the original file if compression succeeds in logic
-      // Ideally, write compressedBytes to a new File path.
-
       setState(() {
         _imageFile = File(pickedFile.path);
       });
