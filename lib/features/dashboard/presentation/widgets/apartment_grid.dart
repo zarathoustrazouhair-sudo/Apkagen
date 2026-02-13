@@ -41,13 +41,15 @@ class ApartmentGrid extends ConsumerWidget {
             return GestureDetector(
               onTap: () {
                 if (resident != null) {
+                  // Navigate to Resident Detail
                   context.pushNamed('resident_detail', pathParameters: {'id': resident.id.toString()});
                 } else {
                   // Fallback for empty apartments (should be covered by seeding)
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Appartement $apartmentNumber : Aucun résident assigné'),
+                      content: Text('Appartement $apartmentNumber : Logement Vacant ou Non Attribué'),
                       backgroundColor: Colors.orange,
+                      action: SnackBarAction(label: "Fermer", onPressed: () {}),
                     ),
                   );
                 }

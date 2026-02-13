@@ -37,7 +37,6 @@ class Users extends Table {
   TextColumn get role => text()();
   RealColumn get balance => real().withDefault(const Constant(0.0))();
   TextColumn get phoneNumber => text().nullable()();
-  // Add other fields if needed, but these are minimal
   TextColumn get accessCode => text().nullable()();
   BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
 }
@@ -73,30 +72,19 @@ class AppDatabase extends _$AppDatabase {
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
-      // Force populate if residents are missing
-      // We check specifically for residents to avoid false positives with just admin user
+      // Force populate if database is empty or residents are missing
       final residentCount = await (select(users)..where((t) => t.role.equals('resident'))).get().then((l) => l.length);
 
       if (residentCount < 5) {
-         // If we have fewer than 5 residents, assume data is corrupted or missing -> Seed
-         // We might want to clear existing to avoid duplicates if IDs clash, or use INSERT OR REPLACE
-         await _populateResidents();
-      }
-
-      try {
-        final txCount = await (select(transactions).get()).then((l) => l.length);
-        if (txCount < 5) {
-          await _populateTransactions();
-        }
-      } catch (e) {
-        print('Error checking transactions: $e');
+         // Force insertion of residents and transactions
+         await _populateInitialData();
       }
     },
   );
 
-  Future<void> _populateResidents() async {
+  Future<void> _populateInitialData() async {
      await batch((batch) {
-      // 1. Insert Residents from Constant
+      // 1. Insert Residents from Constant (15 residents)
       for (final resident in kInitialResidents) {
         // Random balance for realism: between -2000 (debt) and 500 (credit)
         final randomBalance = (Random().nextInt(2500) - 2000).toDouble();
@@ -144,24 +132,26 @@ class AppDatabase extends _$AppDatabase {
         mode: InsertMode.insertOrReplace,
       );
     });
-  }
 
-  Future<void> _populateTransactions() async {
-    // We need residents to link transactions
-    final allUsers = await select(users).get();
-    if (allUsers.isEmpty) return;
+    // 3. Insert Transactions (AFTER users are inserted)
+    // We need to re-fetch users to link transactions correctly (although we forced IDs above)
+    // But we are in a transaction context? No, `batch` is one transaction.
+    // However, we can't select inside the same batch easily unless we commit first.
+    // So we do transactions in a separate step or just use the known IDs.
 
+    // Simple: use the first 10 resident IDs (1 to 10)
     await batch((batch) {
       for (int i = 0; i < 10; i++) {
-        final user = allUsers[i % allUsers.length];
+        final userId = (i % 15) + 1; // 1 to 15
         final isIncome = i % 2 == 0;
+
         batch.insert(
           transactions,
           TransactionsCompanion.insert(
             amount: (i + 1) * 100.0,
             date: DateTime.now().subtract(Duration(days: i * 2)),
-            description: isIncome ? 'Cotisation ${user.name}' : 'Achat matériel',
-            userId: Value(user.id),
+            description: isIncome ? 'Cotisation' : 'Achat matériel',
+            userId: Value(userId),
             type: isIncome ? 'income' : 'expense',
           ),
           mode: InsertMode.insertOrReplace,
