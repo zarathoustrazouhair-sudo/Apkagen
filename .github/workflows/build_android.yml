@@ -2,7 +2,7 @@ name: Build Amandier Logic V1
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ '**' ] # Run on all branches to ensure PRs/Feature branches are tested
   workflow_dispatch:
 
 jobs:

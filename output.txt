@@ -1,0 +1,1 @@
+android/app/src/main/kotlin/com/example/residence_lamandier_b/MainActivity.kt
