@@ -1,14 +1,9 @@
-import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:residence_lamandier_b/core/constants/app_config.dart';
 
 class PdfGeneratorService {
-  final String _residenceName = "Résidence L'Amandier B";
-  final String _syndicName = "M. Abdelati KENBOUCHI";
-  final String _jurisdiction = "Tribunal de Première Instance de Casablanca";
-
   Future<void> generateFinancialReport(List<dynamic> users, List<dynamic> transactions, double monthlyFee) async {
     final doc = pw.Document();
 
@@ -23,7 +18,7 @@ class PdfGeneratorService {
               pw.SizedBox(height: 20),
 
               // TABLE
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 context: context,
                 border: null,
                 headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
@@ -90,7 +85,7 @@ class PdfGeneratorService {
             _buildHeader("REÇU DE PAIEMENT N° $transactionId"),
             pw.SizedBox(height: 30),
             _buildInfoRow("DATE DU PAIEMENT", dateStr),
-            _buildInfoRow("SYNDIC", _syndicName),
+            _buildInfoRow("SYNDIC", AppConfig.syndicName),
             pw.SizedBox(height: 10),
             pw.Divider(),
             pw.SizedBox(height: 10),
@@ -180,7 +175,7 @@ class PdfGeneratorService {
               style: const pw.TextStyle(lineSpacing: 5),
             ),
             pw.Paragraph(
-              text: "À défaut de paiement dans ce délai, votre dossier sera transmis à notre avocat pour le recouvrement forcé par voie judiciaire auprès du $_jurisdiction, conformément à la loi 18-00 régissant la copropriété.",
+              text: "À défaut de paiement dans ce délai, votre dossier sera transmis à notre avocat pour le recouvrement forcé par voie judiciaire auprès du ${AppConfig.jurisdiction}, conformément à la loi 18-00 régissant la copropriété.",
               style: const pw.TextStyle(lineSpacing: 5),
             ),
             pw.Paragraph(
@@ -196,15 +191,15 @@ class PdfGeneratorService {
                 children: [
                   pw.Text("Le Syndic"),
                   pw.SizedBox(height: 10),
-                  pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("Syndic de la $_residenceName"),
+                  pw.Text(AppConfig.syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Syndic de la ${AppConfig.residenceName}"),
                 ],
               ),
             ),
 
             pw.Spacer(),
             pw.Divider(),
-            pw.Center(child: pw.Text("$_residenceName - Syndicat des Copropriétaires", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700))),
+            pw.Center(child: pw.Text("${AppConfig.residenceName} - Syndicat des Copropriétaires", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700))),
           ],
         );
       },
@@ -220,7 +215,7 @@ class PdfGeneratorService {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(_residenceName, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+        pw.Text(AppConfig.residenceName, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
