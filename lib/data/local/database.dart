@@ -17,7 +17,8 @@ class Transactions extends Table {
   RealColumn get amount => real()();
   DateTimeColumn get date => dateTime()();
   TextColumn get description => text()();
-  IntColumn get userId => integer().nullable().references(Users, #id)(); // Optional link
+  IntColumn get userId =>
+      integer().nullable().references(Users, #id)(); // Optional link
   TextColumn get type => text()(); // 'income', 'expense'
 }
 
@@ -40,17 +41,39 @@ class Users extends Table {
   BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions, ServiceProviders])
+@DriftDatabase(
+  tables: [
+    MutationQueue,
+    Tasks,
+    Users,
+    AppSettings,
+    Transactions,
+    ServiceProviders,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      // Add indices for performance
+      await m.createIndex(
+        Index(
+          'users_role_idx',
+          'CREATE INDEX IF NOT EXISTS users_role_idx ON users (role)',
+        ),
+      );
+      await m.createIndex(
+        Index(
+          'transactions_user_id_idx',
+          'CREATE INDEX IF NOT EXISTS transactions_user_id_idx ON transactions (user_id)',
+        ),
+      );
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -79,22 +102,39 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(tasks, tasks.type);
         await m.addColumn(tasks, tasks.authorId);
       }
+      if (from < 7) {
+        // Add indices for frequently queried columns to improve performance
+        await m.createIndex(
+          Index(
+            'users_role_idx',
+            'CREATE INDEX IF NOT EXISTS users_role_idx ON users (role)',
+          ),
+        );
+        await m.createIndex(
+          Index(
+            'transactions_user_id_idx',
+            'CREATE INDEX IF NOT EXISTS transactions_user_id_idx ON transactions (user_id)',
+          ),
+        );
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
       // Force populate if database is empty or residents are missing
-      final residentCount = await (select(users)..where((t) => t.role.equals('resident'))).get().then((l) => l.length);
+      final residentCount = await (select(
+        users,
+      )..where((t) => t.role.equals('resident'))).get().then((l) => l.length);
 
       if (residentCount < 5) {
-         // Force insertion of residents and transactions
-         await _populateInitialData();
+        // Force insertion of residents and transactions
+        await _populateInitialData();
       }
     },
   );
 
   Future<void> _populateInitialData() async {
-     await batch((batch) {
+    await batch((batch) {
       // 1. Insert Residents from Constant (15 residents)
       for (final resident in kInitialResidents) {
         // Random balance for realism: between -2000 (debt) and 500 (credit)
