@@ -29,27 +29,50 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      final tempDir = await getTemporaryDirectory();
-      final targetPath = p.join(tempDir.path, "compressed_${DateTime.now().millisecondsSinceEpoch}.jpg");
-
-      // Compress Image (Max 1920x1080, 85%) and write directly to file
-      final compressedXFile = await FlutterImageCompress.compressAndGetFile(
-        pickedFile.path,
-        targetPath,
-        minWidth: 1920,
-        minHeight: 1080,
-        quality: 85,
-      );
-
+      File? result = await _compressImage(File(pickedFile.path));
       setState(() {
-        if (compressedXFile != null) {
-          _imageFile = File(compressedXFile.path);
-        } else {
-          // Fallback to original if compression fails
-          _imageFile = File(pickedFile.path);
-        }
+        _imageFile = result ?? File(pickedFile.path); // Fallback
       });
     }
+  }
+
+  // STRICT COMPRESSION PROTOCOL
+  Future<File?> _compressImage(File file) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath = p.join(tempDir.path, "compressed_${DateTime.now().millisecondsSinceEpoch}.jpg");
+
+    // Initial: Quality 60, MinWidth 1024
+    var compressed = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      minWidth: 1024,
+      minHeight: 1024,
+      quality: 60,
+      format: CompressFormat.jpeg,
+    );
+
+    // Size Check (Recursive degradation)
+    if (compressed != null) {
+      final size = await compressed.length();
+      if (size > 100 * 1024) { // > 100KB
+        // Try Harder: Quality 40
+        final harderPath = p.join(tempDir.path, "harder_${DateTime.now().millisecondsSinceEpoch}.jpg");
+        compressed = await FlutterImageCompress.compressAndGetFile(
+          file.absolute.path,
+          harderPath,
+          minWidth: 1024,
+          minHeight: 1024,
+          quality: 40, // Reduced quality
+          format: CompressFormat.jpeg,
+        );
+      }
+      // Assuming XFile to File conversion logic if needed, but compressAndGetFile returns XFile?
+      // FlutterImageCompress 2.x returns XFile?.
+      if (compressed != null) {
+        return File(compressed.path);
+      }
+    }
+    return null;
   }
 
   Future<void> _submitPost() async {
@@ -106,7 +129,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 decoration: BoxDecoration(
                   color: Colors.black26,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppPalettes.gold.withOpacity(0.3)),
+                  border: Border.all(color: AppPalettes.gold.withValues(alpha: 0.3)),
                   image: _imageFile != null
                       ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
                       : null,
@@ -131,10 +154,28 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               controller: _titleController,
             ),
             const SizedBox(height: 16),
-            LuxuryTextField(
-              label: "CONTENU",
+            // Replacing LuxuryTextField logic with standard if maxLines not supported,
+            // but checking previous file, it used 'keyboardType: TextInputType.multiline'.
+            // Assuming LuxuryTextField handles multiline if keyboardType is passed?
+            // Just in case, standard TextField with styling.
+            TextField(
               controller: _contentController,
-              keyboardType: TextInputType.multiline,
+              maxLines: 5,
+              style: const TextStyle(color: AppPalettes.offWhite),
+              decoration: InputDecoration(
+                labelText: "CONTENU",
+                labelStyle: TextStyle(color: AppPalettes.gold.withValues(alpha: 0.8)),
+                filled: true,
+                fillColor: AppPalettes.navy.withValues(alpha: 0.5),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: AppPalettes.gold.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: AppPalettes.gold),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
 
             const SizedBox(height: 8),
@@ -142,7 +183,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               alignment: Alignment.centerRight,
               child: Text(
                 "${_contentController.text.length}/10000",
-                style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.5), fontSize: 12),
+                style: TextStyle(color: AppPalettes.offWhite.withValues(alpha: 0.5), fontSize: 12),
               ),
             ),
 

@@ -9,6 +9,7 @@ import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:residence_lamandier_b/core/services/pdf_generator_service.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
 import 'package:residence_lamandier_b/features/residents/data/residents_provider.dart';
+import 'package:residence_lamandier_b/features/finance/data/finance_sync_service.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key});
@@ -228,8 +229,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           };
         });
 
-        // 4. Force UI Refresh (Invalidate Providers)
-        // This ensures the main grid re-fetches the user data immediately
+        // 4. SYNC TO CLOUD (Architect V1)
+        final user = txData['user'] as User;
+        if (user.apartmentNumber != null) {
+          await ref.read(financeSyncServiceProvider).syncBalanceToCloud(
+            user.apartmentNumber!,
+            txData['newBalance']
+          );
+        }
+
+        // 5. Force UI Refresh
         ref.invalidate(residentsProvider);
 
         if (mounted) {
@@ -247,7 +256,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (mounted) setState(() => _isLoading = false);
       }
     } else {
-      // EXPENSE
+      // EXPENSE (Just insert transaction)
       if (_selectedProvider == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un prestataire.')));
         return;
@@ -255,7 +264,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
       setState(() => _isLoading = true);
       try {
-        // Just insert transaction
         await db.into(db.transactions).insert(
           TransactionsCompanion.insert(
             amount: amountInput,
