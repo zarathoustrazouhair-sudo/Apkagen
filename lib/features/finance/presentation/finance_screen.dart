@@ -1,16 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/features/finance/data/finance_provider.dart';
+import 'package:residence_lamandier_b/core/services/pdf_generator_service.dart';
+import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
+import 'package:residence_lamandier_b/data/local/database.dart';
+import 'package:residence_lamandier_b/core/router/role_guards.dart';
+import 'package:residence_lamandier_b/core/router/app_router.dart';
 
 class FinanceScreen extends ConsumerWidget {
   const FinanceScreen({super.key});
 
+  Future<void> _generateHallState(BuildContext context, WidgetRef ref) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Génération du PDF en cours...')));
+
+      final db = ref.read(appDatabaseProvider);
+      final settingsRepo = ref.read(appSettingsRepositoryProvider);
+      final pdfService = PdfGeneratorService(settingsRepo);
+
+      // Fetch all residents
+      final residents = await (db.select(db.users)
+        ..where((t) => t.role.equals('resident'))
+        ..orderBy([(t) => drift.OrderingTerm(expression: t.apartmentNumber)])
+      ).get();
+
+      await pdfService.generateHallState(residents, DateTime.now());
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF généré avec succès !'), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(transactionsProvider);
+    final userRole = ref.watch(userRoleProvider);
+    final canEditFinance = RoleGuards.canEditFinance(userRole);
 
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
@@ -19,6 +53,15 @@ class FinanceScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          // "GENERATE HALL STATE" Button (Syndic/Adjoint only)
+          if (canEditFinance)
+            IconButton(
+              icon: const Icon(Icons.print, color: AppTheme.gold),
+              tooltip: "État Cotisations (Hall)",
+              onPressed: () => _generateHallState(context, ref),
+            ),
+        ],
       ),
       body: transactionsAsync.when(
         data: (transactions) {
@@ -62,11 +105,13 @@ class FinanceScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text("Erreur: $err", style: const TextStyle(color: Colors.red))),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/finance/add'),
-        backgroundColor: AppTheme.gold,
-        child: const Icon(Icons.add, color: AppTheme.darkNavy),
-      ),
+      floatingActionButton: canEditFinance
+        ? FloatingActionButton(
+            onPressed: () => context.push('/finance/add'),
+            backgroundColor: AppTheme.gold,
+            child: const Icon(Icons.add, color: AppTheme.darkNavy),
+          )
+        : null,
     );
   }
 }

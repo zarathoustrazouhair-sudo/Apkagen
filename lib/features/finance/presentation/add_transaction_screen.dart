@@ -8,6 +8,7 @@ import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart'
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:residence_lamandier_b/core/services/pdf_generator_service.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
+import 'package:residence_lamandier_b/features/residents/data/residents_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key});
@@ -97,7 +98,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       if (!snapshot.hasData) return const CircularProgressIndicator();
                       return DropdownButtonFormField<User>(
                         dropdownColor: AppTheme.darkNavy,
-                        initialValue: _selectedUser,
+                        // Ensure selectedUser is still in the list (referential equality might fail if stream updates, so find by ID)
+                        value: _selectedUser != null
+                            ? snapshot.data!.cast<User?>().firstWhere((u) => u?.id == _selectedUser!.id, orElse: () => null)
+                            : null,
                         items: snapshot.data!.map((user) {
                           return DropdownMenuItem(
                             value: user,
@@ -155,7 +159,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     dropdownColor: AppTheme.darkNavy,
-                    initialValue: _selectedMode,
+                    value: _selectedMode,
                     items: ["Espèces", "Chèque", "Virement"].map((mode) {
                       return DropdownMenuItem(value: mode, child: Text(mode, style: const TextStyle(color: AppTheme.offWhite)));
                     }).toList(),
@@ -223,6 +227,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             'user': freshUser,
           };
         });
+
+        // 4. Force UI Refresh (Invalidate Providers)
+        // This ensures the main grid re-fetches the user data immediately
+        ref.invalidate(residentsProvider);
 
         if (mounted) {
           _showSuccessDialog(
@@ -313,7 +321,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         content: const Text("La transaction a été sécurisée et enregistrée avec succès.", style: TextStyle(color: AppTheme.offWhite)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+               Navigator.pop(context);
+               Navigator.pop(context); // Go back to Finance or Cockpit
+            },
             child: const Text("FERMER", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton.icon(
