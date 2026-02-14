@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:drift/drift.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 

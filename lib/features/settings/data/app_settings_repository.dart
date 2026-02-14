@@ -1,5 +1,4 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:drift/drift.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 
 part 'app_settings_repository.g.dart';

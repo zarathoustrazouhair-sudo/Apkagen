@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:residence_lamandier_b/core/sync/mutation_queue_entity.dart';
 import 'package:residence_lamandier_b/features/tasks/data/task_entity.dart';
-import 'package:residence_lamandier_b/features/users/data/user_entity.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_entity.dart';
 import 'package:residence_lamandier_b/core/constants/initial_data.dart';
 

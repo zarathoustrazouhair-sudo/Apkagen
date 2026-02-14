@@ -173,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           // Floor Selector
                           DropdownButtonFormField<int>(
                             dropdownColor: AppTheme.darkNavy,
-                            value: _selectedFloor,
+                            initialValue: _selectedFloor,
                             decoration: const InputDecoration(labelText: "ÉTAGE"),
                             items: [1, 2, 3].map((f) => DropdownMenuItem(value: f, child: Text("Étage $f", style: const TextStyle(color: AppTheme.offWhite)))).toList(),
                             onChanged: (val) {
@@ -196,7 +196,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                               return DropdownButtonFormField<User>(
                                 dropdownColor: AppTheme.darkNavy,
-                                value: _selectedApartment,
+                                initialValue: _selectedApartment,
                                 decoration: const InputDecoration(labelText: "APPARTEMENT"),
                                 items: snapshot.data!.map((user) => DropdownMenuItem(
                                   value: user,

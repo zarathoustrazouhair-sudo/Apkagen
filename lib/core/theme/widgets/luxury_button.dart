@@ -20,10 +20,10 @@ class LuxuryButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
             AppTheme.gold,
-            const Color(0xFFB4941F), // Darker gold
+            Color(0xFFB4941F), // Darker gold
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

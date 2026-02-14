@@ -6,7 +6,6 @@ import 'package:residence_lamandier_b/core/theme/widgets/luxury_button.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
-import 'package:residence_lamandier_b/data/local/database.dart';
 
 class WizardScreen extends ConsumerStatefulWidget {
   const WizardScreen({super.key});

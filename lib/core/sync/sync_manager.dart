@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'dart:convert';
-import 'package:residence_lamandier_b/core/sync/mutation_queue_entity.dart';
 import 'package:drift/drift.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
@@ -20,8 +19,9 @@ class SyncManager {
 
   SyncManager(this._db) {
     // Listen to connectivity changes
-    Connectivity().onConnectivityChanged.listen((result) {
-      if (result != ConnectivityResult.none) {
+    // v6.0.0 breaking change: onConnectivityChanged returns Stream<List<ConnectivityResult>>
+    Connectivity().onConnectivityChanged.listen((results) {
+      if (!results.contains(ConnectivityResult.none)) {
         processQueue();
       }
     });
@@ -50,8 +50,9 @@ class SyncManager {
     if (pending.isEmpty) return;
 
     // Check connectivity again before processing loop
+    // v6.0.0 breaking change: checkConnectivity returns List<ConnectivityResult>
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) return;
+    if (connectivityResult.contains(ConnectivityResult.none)) return;
 
     for (var item in pending) {
       try {

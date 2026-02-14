@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -9,7 +8,6 @@ class PdfGeneratorService {
   final AppSettingsRepository _settingsRepo;
   final String _residenceName = "Résidence L'Amandier B";
   final String _syndicName = "M. Abdelati KENBOUCHI";
-  final String _jurisdiction = "Tribunal de Première Instance de Casablanca";
 
   PdfGeneratorService(this._settingsRepo);
 
@@ -27,7 +25,7 @@ class PdfGeneratorService {
               pw.SizedBox(height: 20),
 
               // TABLE
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 context: context,
                 border: null,
                 headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
@@ -226,7 +224,7 @@ class PdfGeneratorService {
 
             pw.Spacer(),
             pw.Divider(),
-            pw.Center(child: pw.Text("$_residenceName", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700))),
+            pw.Center(child: pw.Text(_residenceName, style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700))),
           ],
         );
       },

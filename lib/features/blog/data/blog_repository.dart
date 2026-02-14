@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:residence_lamandier_b/features/blog/data/post_entity.dart';
@@ -95,7 +96,7 @@ class BlogRepository {
           );
           imageUrl = _client!.storage.from('blog_images').getPublicUrl(fileName);
         } catch (uploadError) {
-          print("BlogRepository: Upload failed ($uploadError). Using local path as fallback.");
+          debugPrint("BlogRepository: Upload failed ($uploadError). Using local path as fallback.");
           // We continue to insert the post, but use the local path for immediate display?
           // No, Supabase needs a URL. If upload fails, we must treat the whole operation as offline/pending.
           throw Exception("Upload Failed");
@@ -110,7 +111,7 @@ class BlogRepository {
       });
 
     } catch (e) {
-      print("BlogRepository: Backend error ($e). Saving locally and queuing.");
+      debugPrint("BlogRepository: Backend error ($e). Saving locally and queuing.");
 
       // 1. Memory Cache (Immediate UX)
       // Use local file path as imageUrl for display in this session

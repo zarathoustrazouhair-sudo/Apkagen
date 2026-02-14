@@ -96,14 +96,14 @@ class _SecureSosButtonState extends State<SecureSosButton> {
               ),
             ],
           ),
-          child: Column(
+          child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 40),
-              const SizedBox(height: 8),
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 40),
+              SizedBox(height: 8),
               Text(
                 "APPUYER POUR ALERTE",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,

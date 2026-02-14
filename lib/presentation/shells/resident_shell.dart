@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
-import 'package:residence_lamandier_b/core/theme/widgets/luxury_button.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/features/blog/presentation/blog_feed_screen.dart';
 
@@ -121,10 +120,10 @@ class MyApartmentScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         "0.00 DH",
                         style: TextStyle(
-                          color: const Color(0xFF00E5FF), // Cyan for OK
+                          color: Color(0xFF00E5FF), // Cyan for OK
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Playfair Display',
@@ -147,12 +146,12 @@ class MyApartmentScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
               ),
-              child: Center(
+              child: const Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.sos, color: AppTheme.errorRed),
-                    const SizedBox(width: 8),
+                    Icon(Icons.sos, color: AppTheme.errorRed),
+                    SizedBox(width: 8),
                     Text(
                       "SOS URGENCES",
                       style: TextStyle(

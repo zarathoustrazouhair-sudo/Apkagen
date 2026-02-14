@@ -74,7 +74,7 @@ class UserManagementScreen extends ConsumerWidget {
                           ),
                           Switch(
                             value: user.isBlocked,
-                            activeColor: AppTheme.errorRed,
+                            activeThumbColor: AppTheme.errorRed,
                             onChanged: (val) {
                               (db.update(db.users)..where((t) => t.id.equals(user.id))).write(
                                 UsersCompanion(isBlocked: drift.Value(val)),

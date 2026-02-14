@@ -97,7 +97,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       if (!snapshot.hasData) return const CircularProgressIndicator();
                       return DropdownButtonFormField<User>(
                         dropdownColor: AppTheme.darkNavy,
-                        value: _selectedUser,
+                        initialValue: _selectedUser,
                         items: snapshot.data!.map((user) {
                           return DropdownMenuItem(
                             value: user,
@@ -121,7 +121,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             final providers = snapshot.data!;
                             return DropdownButtonFormField<ServiceProvider>(
                               dropdownColor: AppTheme.darkNavy,
-                              value: _selectedProvider,
+                              initialValue: _selectedProvider,
                               items: providers.map((prov) {
                                 return DropdownMenuItem(
                                   value: prov,
@@ -155,7 +155,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     dropdownColor: AppTheme.darkNavy,
-                    value: _selectedMode,
+                    initialValue: _selectedMode,
                     items: ["Espèces", "Chèque", "Virement"].map((mode) {
                       return DropdownMenuItem(value: mode, child: Text(mode, style: const TextStyle(color: AppTheme.offWhite)));
                     }).toList(),

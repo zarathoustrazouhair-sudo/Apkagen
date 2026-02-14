@@ -32,16 +32,16 @@ class BlockedUserScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              LuxuryCard(
-                padding: const EdgeInsets.all(24),
+              const LuxuryCard(
+                padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       "MONTANT DÛ",
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       "2,500.00 DH", // Mock value, in real app pass as arg
                       style: TextStyle(
                         color: AppTheme.errorRed,
@@ -49,13 +49,13 @@ class BlockedUserScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Divider(color: Colors.grey, height: 32),
-                    const Text(
+                    Divider(color: Colors.grey, height: 32),
+                    Text(
                       "RIB POUR RÉGULARISATION",
                       style: TextStyle(color: AppTheme.gold, fontSize: 12, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
-                    const SelectableText(
+                    SizedBox(height: 8),
+                    SelectableText(
                       "123 456 78901234567890 12",
                       style: TextStyle(
                         color: AppTheme.offWhite,

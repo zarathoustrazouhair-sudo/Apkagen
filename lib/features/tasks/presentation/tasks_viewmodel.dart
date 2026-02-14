@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
-import 'package:residence_lamandier_b/features/tasks/data/task_entity.dart';
 import 'package:drift/drift.dart';
 
 part 'tasks_viewmodel.g.dart';

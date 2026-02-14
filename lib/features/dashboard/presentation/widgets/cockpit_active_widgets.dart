@@ -64,7 +64,7 @@ class CockpitActiveWidgets extends ConsumerWidget {
                       ],
                     ),
                     Text(emoji, style: const TextStyle(fontSize: 32)),
-                    Text("${cash.toStringAsFixed(0)} DH", style: TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text("${cash.toStringAsFixed(0)} DH", style: const TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
                   ],
                 ),
               );

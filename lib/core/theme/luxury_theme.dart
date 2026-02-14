@@ -16,12 +16,10 @@ class AppTheme {
         primary: gold,
         secondary: gold,
         surface: darkNavy,
-        background: darkNavy,
         error: errorRed,
         onPrimary: darkNavy,
         onSecondary: darkNavy,
         onSurface: offWhite,
-        onBackground: offWhite,
         onError: darkNavy,
       ),
       textTheme: TextTheme(

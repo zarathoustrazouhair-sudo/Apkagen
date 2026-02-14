@@ -36,7 +36,7 @@ class ConciergeShell extends StatelessWidget {
                     style: TextStyle(color: AppTheme.offWhite.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     "3",
                     style: TextStyle(color: AppTheme.gold, fontSize: 48, fontWeight: FontWeight.bold, fontFamily: 'Playfair Display'),
                   ),

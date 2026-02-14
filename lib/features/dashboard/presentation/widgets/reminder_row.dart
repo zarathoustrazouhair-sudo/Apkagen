@@ -73,7 +73,7 @@ class ReminderRow extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       "2",
                       style: TextStyle(
                         color: AppTheme.errorRed,
