@@ -56,14 +56,17 @@ class CockpitActiveWidgets extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("SANTÉ FINANCIÈRE", style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.7), fontSize: 10)),
-                        Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-                      ],
+                    Expanded( // Prevent text overflow
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("SANTÉ FINANCIÈRE", style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.7), fontSize: 10)),
+                          Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
+                      ),
                     ),
                     Text(emoji, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 8),
                     Text("${cash.toStringAsFixed(0)} DH", style: const TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
                   ],
                 ),
@@ -78,7 +81,7 @@ class CockpitActiveWidgets extends ConsumerWidget {
           stream: (db.select(db.tasks)..where((t) => t.isCompleted.not())).watch(),
           builder: (context, snapshot) {
             final tasks = snapshot.data ?? [];
-            final incidentCount = tasks.length; // Assume all open tasks are "incidents" or to-dos
+            final incidentCount = tasks.length;
 
             return Row(
               children: [
@@ -87,7 +90,7 @@ class CockpitActiveWidgets extends ConsumerWidget {
                   flex: 1,
                   child: Container(
                     height: 100,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8), // Reduced padding
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -96,14 +99,16 @@ class CockpitActiveWidgets extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
                         const SizedBox(height: 4),
-                         // FIX OVERFLOW: Using FittedBox
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text("$incidentCount", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                         // FIX OVERFLOW: Using FittedBox and Flexible
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text("$incidentCount", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                          ),
                         ),
-                        const Text("INCIDENTS", style: TextStyle(color: Colors.redAccent, fontSize: 8)),
+                        const Text("INCIDENTS", style: TextStyle(color: Colors.redAccent, fontSize: 8), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),

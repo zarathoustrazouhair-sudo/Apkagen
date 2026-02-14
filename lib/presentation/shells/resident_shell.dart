@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/features/blog/presentation/blog_feed_screen.dart';
+import 'package:residence_lamandier_b/features/documents/presentation/documents_screen.dart';
+import 'package:residence_lamandier_b/data/local/database.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:residence_lamandier_b/core/theme/widgets/luxury_button.dart';
+import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart';
 
 class ResidentShell extends ConsumerStatefulWidget {
   const ResidentShell({super.key});
@@ -16,8 +21,8 @@ class _ResidentShellState extends ConsumerState<ResidentShell> {
   final List<Widget> _screens = [
     const MyApartmentScreen(),
     const BlogFeedScreen(),
-    const Center(child: Text("Documents", style: TextStyle(color: AppTheme.gold))),
-    const Center(child: Text("Profile", style: TextStyle(color: AppTheme.gold))),
+    const DocumentsScreen(), // Replaced placeholder
+    const ResidentProfileScreen(), // Replaced placeholder
   ];
 
   @override
@@ -65,11 +70,19 @@ class _ResidentShellState extends ConsumerState<ResidentShell> {
   }
 }
 
-class MyApartmentScreen extends StatelessWidget {
+// -----------------------------------------------------------------------------
+// MY APARTMENT (HOME)
+// -----------------------------------------------------------------------------
+class MyApartmentScreen extends ConsumerWidget {
   const MyApartmentScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Ideally fetch logged in user from a proper AuthProvider.
+    // For MVP, we might mock or grab the first resident logic if strict Auth isn't fully piped.
+    // But since LoginScreen sets the UserRole, we don't have the ID in a global provider yet.
+    // Let's assume we are viewing a generic resident dashboard or using a mock for "M. Amrani".
+
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
       appBar: AppBar(
@@ -92,7 +105,7 @@ class MyApartmentScreen extends StatelessWidget {
           children: [
             // Welcome Header
             const Text(
-              "Bonjour, M. Amrani",
+              "Bonjour, Résident", // Generic fallback
               style: TextStyle(
                 color: AppTheme.offWhite,
                 fontSize: 24,
@@ -164,27 +177,6 @@ class MyApartmentScreen extends StatelessWidget {
                 ),
               ),
             ),
-             const SizedBox(height: 32),
-
-             // Recent Blog Posts Preview (Header)
-             Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-               children: [
-                 Text(
-                   "DERNIÈRES ACTUALITÉS",
-                   style: TextStyle(
-                     color: AppTheme.offWhite.withOpacity(0.8),
-                     fontSize: 14,
-                     fontWeight: FontWeight.bold,
-                   ),
-                 ),
-                 TextButton(
-                   onPressed: () {},
-                   child: const Text("Voir tout", style: TextStyle(color: AppTheme.gold)),
-                 ),
-               ],
-             ),
-             // Note: In a real app, we'd list a few items here.
           ],
         ),
       ),
@@ -195,6 +187,118 @@ class MyApartmentScreen extends StatelessWidget {
         backgroundColor: AppTheme.gold,
         label: const Text("SIGNALER INCIDENT", style: TextStyle(color: AppTheme.darkNavy, fontWeight: FontWeight.bold)),
         icon: const Icon(Icons.build, color: AppTheme.darkNavy),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RESIDENT PROFILE (SELF-EDIT)
+// -----------------------------------------------------------------------------
+class ResidentProfileScreen extends ConsumerWidget {
+  const ResidentProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // In a real app, grab ID from AuthProvider. Here, we mock ID=1 for demo self-edit.
+    final myId = 1;
+    final db = ref.watch(appDatabaseProvider);
+
+    return Scaffold(
+      backgroundColor: AppTheme.darkNavy,
+      appBar: AppBar(
+        title: Text("MON PROFIL", style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(color: AppTheme.gold, fontSize: 18)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: StreamBuilder<User?>(
+        stream: (db.select(db.users)..where((t) => t.id.equals(myId))).watchSingleOrNull(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final user = snapshot.data!;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 50,
+                  backgroundColor: AppTheme.gold,
+                  child: Icon(Icons.person, size: 50, color: AppTheme.darkNavy),
+                ),
+                const SizedBox(height: 16),
+                Text(user.name, style: const TextStyle(color: AppTheme.offWhite, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text("Appartement ${user.apartmentNumber}", style: TextStyle(color: AppTheme.offWhite.withOpacity(0.7))),
+                const SizedBox(height: 32),
+
+                LuxuryCard(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.phone, color: AppTheme.gold),
+                        title: const Text("Téléphone", style: TextStyle(color: AppTheme.offWhite, fontSize: 12)),
+                        subtitle: Text(user.phoneNumber ?? "Non renseigné", style: const TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold)),
+                        trailing: const Icon(Icons.edit, size: 16, color: Colors.grey),
+                        onTap: () => _showEditFieldDialog(context, ref, user, "Téléphone", user.phoneNumber, (val) => UsersCompanion(phoneNumber: drift.Value(val))),
+                      ),
+                      const Divider(color: Colors.white10),
+                      ListTile(
+                        leading: const Icon(Icons.lock, color: AppTheme.gold),
+                        title: const Text("Code d'accès", style: TextStyle(color: AppTheme.offWhite, fontSize: 12)),
+                        subtitle: Text("****", style: const TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold)),
+                        trailing: const Icon(Icons.edit, size: 16, color: Colors.grey),
+                        onTap: () => _showEditFieldDialog(context, ref, user, "Code PIN", user.accessCode, (val) => UsersCompanion(accessCode: drift.Value(val))),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                LuxuryButton(
+                  label: "DÉCONNEXION",
+                  onPressed: () {
+                    // Navigate back to login
+                    // ref.read(userRoleProvider.notifier).state = ... (reset if needed)
+                    // context.go('/login');
+                  },
+                  // style: red button...
+                )
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEditFieldDialog(
+    BuildContext context,
+    WidgetRef ref,
+    User user,
+    String label,
+    String? currentValue,
+    UsersCompanion Function(String) companionBuilder,
+  ) {
+    final ctrl = TextEditingController(text: currentValue);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkNavy,
+        title: Text("Modifier $label", style: const TextStyle(color: AppTheme.gold)),
+        content: LuxuryTextField(label: label, controller: ctrl),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("ANNULER", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.gold),
+            onPressed: () async {
+              final db = ref.read(appDatabaseProvider);
+              await (db.update(db.users)..where((t) => t.id.equals(user.id))).write(companionBuilder(ctrl.text));
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text("SAUVEGARDER", style: TextStyle(color: AppTheme.darkNavy)),
+          )
+        ],
       ),
     );
   }

@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:residence_lamandier_b/core/theme/luxury_theme.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_card.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:residence_lamandier_b/core/services/pdf_generator_service.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
+import 'package:residence_lamandier_b/core/router/role_guards.dart';
+import 'package:residence_lamandier_b/core/router/app_router.dart';
+import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart';
 
 class ResidentDetailScreen extends ConsumerWidget {
   final int userId;
@@ -95,11 +99,53 @@ class ResidentDetailScreen extends ConsumerWidget {
     }
   }
 
+  void _showEditDialog(BuildContext context, WidgetRef ref, User user) {
+    final nameCtrl = TextEditingController(text: user.name);
+    final phoneCtrl = TextEditingController(text: user.phoneNumber);
+    // Add Email if schema supports it, for now Name/Phone
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkNavy,
+        title: const Text("Modifier Résident", style: TextStyle(color: AppTheme.gold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LuxuryTextField(label: "Nom Complet", controller: nameCtrl),
+            const SizedBox(height: 16),
+            LuxuryTextField(label: "Téléphone", controller: phoneCtrl, keyboardType: TextInputType.phone),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("ANNULER", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.gold),
+            onPressed: () async {
+              final db = ref.read(appDatabaseProvider);
+              await (db.update(db.users)..where((t) => t.id.equals(user.id))).write(
+                UsersCompanion(
+                  name: drift.Value(nameCtrl.text),
+                  phoneNumber: drift.Value(phoneCtrl.text),
+                ),
+              );
+              if (ctx.mounted) Navigator.pop(ctx);
+              // StreamBuilder handles refresh automatically
+            },
+            child: const Text("ENREGISTRER", style: TextStyle(color: AppTheme.darkNavy, fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(appDatabaseProvider);
     final settingsRepo = ref.watch(appSettingsRepositoryProvider);
     final pdfService = PdfGeneratorService(settingsRepo);
+    final userRole = ref.watch(userRoleProvider);
+    final isSyndic = userRole == UserRole.syndic;
 
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
@@ -108,13 +154,19 @@ class ResidentDetailScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          if (isSyndic)
+            // Ideally we pass the user object, but here we are in build context where user is async.
+            // We can only show the button, logic needs user data.
+            // We'll handle it inside the StreamBuilder or use a state variable if we want it in AppBar.
+            // Better: Put the edit button inside the body or next to the name card.
+            // Let's put a placeholder here that is disabled until data loads?
+            // Or simpler: put it in the LuxuryCard below.
+            const SizedBox.shrink(),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-            // Pre-fill Transaction Screen
-            // Note: Since we don't have route arguments setup for pre-fill easily without refactor,
-            // we will just open AddTransactionScreen. User selects resident manually or we enhance later.
-            // For now, let's keep it simple as per TEP constraint or try to pass ID if possible.
             context.push('/finance/add');
         },
         backgroundColor: AppTheme.gold,
@@ -143,16 +195,27 @@ class ResidentDetailScreen extends ConsumerWidget {
                         children: [
                           const CircleAvatar(backgroundColor: AppTheme.gold, child: Icon(Icons.person, color: AppTheme.darkNavy)),
                           const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(user.name, style: const TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
-                              Text("Appartement ${user.apartmentNumber}", style: TextStyle(color: AppTheme.offWhite.withOpacity(0.7))),
-                              if (user.phoneNumber != null)
-                                Text(user.phoneNumber!, style: TextStyle(color: AppTheme.offWhite.withOpacity(0.5), fontSize: 12)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(child: Text(user.name, style: const TextStyle(color: AppTheme.offWhite, fontWeight: FontWeight.bold, fontSize: 18))),
+                                    if (isSyndic)
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, color: AppTheme.gold, size: 20),
+                                        onPressed: () => _showEditDialog(context, ref, user),
+                                      ),
+                                  ],
+                                ),
+                                Text("Appartement ${user.apartmentNumber}", style: TextStyle(color: AppTheme.offWhite.withOpacity(0.7))),
+                                if (user.phoneNumber != null)
+                                  Text(user.phoneNumber!, style: TextStyle(color: AppTheme.offWhite.withOpacity(0.5), fontSize: 12)),
+                              ],
+                            ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Text("${user.balance.toStringAsFixed(2)} DH", style: TextStyle(color: user.balance < 0 ? AppTheme.errorRed : const Color(0xFF00E5FF), fontWeight: FontWeight.bold, fontSize: 18)),
                         ],
                       ),
