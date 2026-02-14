@@ -220,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                           // PIN Code
                           LuxuryTextField(
-                            label: "CODE PIN (Défaut: 0000)",
+                            label: "CODE PIN",
                             controller: _pinController,
                             obscureText: true,
                             keyboardType: TextInputType.number,
@@ -310,7 +310,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     String? correctPin = _selectedApartment!.accessCode;
     String enteredPin = _pinController.text;
 
-    if (enteredPin == "0000" || (correctPin != null && correctPin == enteredPin)) {
+    // Use "0000" as default PIN if none is set.
+    // Do NOT allow "0000" bypass if a custom PIN is set.
+    final effectivePin = correctPin ?? "0000";
+
+    if (enteredPin == effectivePin) {
        ref.read(userRoleProvider.notifier).state = UserRole.resident;
        // We must pass the user ID or setup state so the shell knows WHO is logged in.
        // Ideally, we'd use a robust AuthProvider.
