@@ -8,7 +8,6 @@ import 'package:residence_lamandier_b/features/blog/data/post_entity.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:residence_lamandier_b/core/sync/mutation_queue_entity.dart';
-import 'package:residence_lamandier_b/core/constants/db_constants.dart';
 
 part 'blog_repository.g.dart';
 
@@ -34,22 +33,22 @@ class BlogRepository {
       if (_client == null) throw Exception("Offline Mode");
 
       final response = await _client!
-          .from(DbTables.blogPosts)
-          .select('*, ${DbTables.profiles}(${DbColumns.firstName}, ${DbColumns.lastName}, ${DbColumns.role})')
-          .order(DbColumns.createdAt, ascending: false);
+          .from('blog_posts')
+          .select('*, profiles(first_name, last_name, role)')
+          .order('created_at', ascending: false);
 
       final List<dynamic> dataList = response as List<dynamic>;
       final remotePosts = dataList.map((data) {
-        final profile = data[DbTables.profiles] ?? {};
-        final authorName = "${profile[DbColumns.firstName] ?? ''} ${profile[DbColumns.lastName] ?? ''} (${profile[DbColumns.role] ?? '?'})";
+        final profile = data['profiles'] ?? {};
+        final authorName = "${profile['first_name'] ?? ''} ${profile['last_name'] ?? ''} (${profile['role'] ?? '?'})";
 
         return PostEntity(
-          id: data[DbColumns.id].toString(),
-          title: data[DbColumns.title] ?? '',
-          content: data[DbColumns.content] ?? '',
+          id: data['id'].toString(),
+          title: data['title'] ?? '',
+          content: data['content'] ?? '',
           author: authorName.trim(),
-          imageUrl: data[DbColumns.imageUrl], // Nullable
-          createdAt: DateTime.tryParse(data[DbColumns.createdAt].toString()) ?? DateTime.now(),
+          imageUrl: data['image_url'], // Nullable
+          createdAt: DateTime.tryParse(data['created_at'].toString()) ?? DateTime.now(),
         );
       }).toList();
 
@@ -65,13 +64,13 @@ class BlogRepository {
     if (_client == null) return;
     try {
       // Upsert view
-      await _client!.from(DbTables.postViews).upsert(
+      await _client!.from('post_views').upsert(
         {
-          DbColumns.postId: int.tryParse(postId) ?? 0,
-          DbColumns.userId: _client!.auth.currentUser!.id,
-          DbColumns.seenAt: DateTime.now().toIso8601String(),
+          'post_id': int.tryParse(postId) ?? 0,
+          'user_id': _client!.auth.currentUser!.id,
+          'seen_at': DateTime.now().toIso8601String(),
         },
-        onConflict: '${DbColumns.postId}, ${DbColumns.userId}'
+        onConflict: 'post_id, user_id'
       );
     } catch (e) {
       debugPrint("Failed to mark post as seen: $e");
@@ -82,9 +81,9 @@ class BlogRepository {
     if (_client == null) return 0;
     try {
       final response = await _client!
-          .from(DbTables.postViews)
+          .from('post_views')
           .count(CountOption.exact)
-          .eq(DbColumns.postId, int.tryParse(postId) ?? 0);
+          .eq('post_id', int.tryParse(postId) ?? 0);
       return response;
     } catch (e) {
       return 0;
@@ -102,7 +101,7 @@ class BlogRepository {
         return;
       }
 
-      await _client!.from(DbTables.blogPosts).delete().eq(DbColumns.id, postId);
+      await _client!.from('blog_posts').delete().eq('id', postId);
     } catch (e) {
       debugPrint("Failed to delete post: $e");
       // Optionally queue this action
@@ -129,23 +128,23 @@ class BlogRepository {
       if (imageFile != null) {
         try {
           final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}.jpg';
-          await _client!.storage.from(StorageBuckets.blogImages).upload(
+          await _client!.storage.from('blog_images').upload(
             fileName,
             imageFile,
             fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
           );
-          imageUrl = _client!.storage.from(StorageBuckets.blogImages).getPublicUrl(fileName);
+          imageUrl = _client!.storage.from('blog_images').getPublicUrl(fileName);
         } catch (uploadError) {
           debugPrint("BlogRepository: Upload failed ($uploadError). Using local path as fallback.");
           throw Exception("Upload Failed");
         }
       }
 
-      await _client!.from(DbTables.blogPosts).insert({
-        DbColumns.title: title,
-        DbColumns.content: content,
-        DbColumns.imageUrl: imageUrl,
-        DbColumns.authorId: _client!.auth.currentUser!.id,
+      await _client!.from('blog_posts').insert({
+        'title': title,
+        'content': content,
+        'image_url': imageUrl,
+        'author_id': _client!.auth.currentUser!.id,
       });
 
     } catch (e) {

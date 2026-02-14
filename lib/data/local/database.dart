@@ -42,7 +42,7 @@ class Users extends Table {
 
 @DriftDatabase(tables: [MutationQueue, Tasks, Users, AppSettings, Transactions, ServiceProviders])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
+  AppDatabase() : super(_openConnection());
 
   @override
   int get schemaVersion => 6;

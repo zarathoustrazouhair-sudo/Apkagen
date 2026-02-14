@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
-import 'package:residence_lamandier_b/core/constants/db_constants.dart';
 
 part 'auth_repository.g.dart';
 
@@ -39,12 +38,12 @@ class AuthRepository {
 
     try {
       final response = await _client
-          .from(DbTables.profiles)
-          .select(DbColumns.role)
-          .eq(DbColumns.id, user.id)
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
           .single();
 
-      final roleStr = response[DbColumns.role] as String?;
+      final roleStr = response['role'] as String?;
 
       switch (roleStr) {
         case 'syndic': return UserRole.syndic;

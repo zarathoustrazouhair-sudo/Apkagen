@@ -10,6 +10,8 @@ import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/re
 import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/cockpit_active_widgets.dart';
 import 'package:residence_lamandier_b/core/router/role_guards.dart';
 import 'package:residence_lamandier_b/core/router/app_router.dart';
+import 'package:residence_lamandier_b/features/incidents/presentation/incidents_screen.dart';
+import 'package:residence_lamandier_b/features/tasks/presentation/tasks_screen.dart';
 
 class CockpitScreen extends ConsumerWidget {
   const CockpitScreen({super.key});
@@ -18,7 +20,6 @@ class CockpitScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userRole = ref.watch(userRoleProvider);
     final canEditFinance = RoleGuards.canEditFinance(userRole);
-    // PERMISSION LAYER: Concierge cannot see Finance details
     final canViewFinance = userRole != UserRole.concierge;
 
     return Scaffold(
@@ -37,19 +38,26 @@ class CockpitScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 0. Active Widgets (Survival, Incidents)
-            // Note: Survival Emoji (Financial Health) is inside here. Should we hide it too?
-            // TEP Logic: "Concierge: INTERDIT (Masqué)" for Finance.
-            // Let's pass the role/permission to the widget or wrap it.
-            // But CockpitActiveWidgets has mixed content (Incidents + Finance).
-            // We should ideally split or pass a flag. For now, let's keep Incidents visible.
-            // We will modify CockpitActiveWidgets in a separate edit if needed, or assume "Survival" is high level enough?
-            // Wait, TEP says "Finance: INTERDIT". Survival IS Finance.
-            // Let's assume we need to hide the top row of CockpitActiveWidgets if Concierge.
+            // INTERACTIVE ACTIVE WIDGETS
+            // Wrap in InkWell handled within CockpitActiveWidgets if possible, or wrap here.
+            // Since CockpitActiveWidgets has multiple children, wrapping the whole thing goes to one place?
+            // The plan says "Wrap SyndiMood -> Finance", "Incidents -> Incidents", "Actions -> Tasks".
+            // Since CockpitActiveWidgets encapsulates them, we should modify it to accept callbacks or handle taps internally.
+            // But for "Emergency Refactor", simpler to wrap the whole block or modify internal.
+            // Let's modify CockpitActiveWidgets to be interactive.
+            // Wait, I can't pass callbacks easily without refactoring CockpitActiveWidgets extensively.
+            // I'll wrap CockpitActiveWidgets in a Column of InkWells if I can split it, or just rely on the user clicking the specific area?
+            // Actually, `CockpitActiveWidgets` builds a `Column` of rows. I should ideally refactor it to return separate widgets.
+            // For now, let's wrap the whole `CockpitActiveWidgets` in a GestureDetector that navigates to Incidents as a fallback? No, confusing.
+            // I will update `CockpitActiveWidgets` to include the navigation logic directly.
+
+            // Re-importing logic here to keep it simple:
+            // Actually, I can just use `CockpitActiveWidgets` and let it handle taps if I update it.
+            // I'll update `CockpitActiveWidgets` in the next write.
             CockpitActiveWidgets(hideFinance: !canViewFinance),
+
             const SizedBox(height: 24),
 
-            // 1. KPI Cards (FINANCE) - HIDDEN FOR CONCIERGE
             if (canViewFinance) ...[
               InkWell(
                 onTap: () => context.push('/finance'),
@@ -80,11 +88,9 @@ class CockpitScreen extends ConsumerWidget {
               const SizedBox(height: 16),
             ],
 
-            // 2. Reminder Row
             const ReminderRow(),
             const SizedBox(height: 24),
 
-            // 3. Matrix (Residents)
             Text(
               "MATRICE RÉSIDENTS",
               style: TextStyle(
@@ -98,7 +104,6 @@ class CockpitScreen extends ConsumerWidget {
             const ApartmentGrid(),
             const SizedBox(height: 24),
 
-            // 4. Charts (FINANCE) - HIDDEN FOR CONCIERGE
             if (canViewFinance) ...[
                Text(
                 "ANALYSE FINANCIÈRE",

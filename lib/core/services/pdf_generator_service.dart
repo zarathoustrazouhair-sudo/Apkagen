@@ -59,7 +59,7 @@ class PdfGeneratorService {
                 data: users.map((u) {
                   final isDebt = u.balance < 0;
                   final status = isDebt ? 'IMPAYÉ' : 'PAYÉ';
-                  final statusColor = isDebt ? PdfColors.red : PdfColors.green;
+                  // Note: PdfColors doesn't support withValues/opacity easily in logic, sticking to core colors
 
                   return [
                     "AP ${u.apartmentNumber ?? '-'}",
@@ -112,63 +112,7 @@ class PdfGeneratorService {
     await Printing.layoutPdf(onLayout: (format) => doc.save(), name: "Etat_Cotisations_$monthStr.pdf");
   }
 
-  // OLD METHODS PRESERVED BELOW (generateFinancialReport, generateReceipt, generateWarningLetter)
-  // ... (Keeping previous implementation structure effectively by not overwriting them,
-  // but wait, write_file overwrites. I must include the old methods too.)
-
-  Future<void> generateFinancialReport(List<dynamic> users, List<dynamic> transactions, double monthlyFee) async {
-    final doc = pw.Document();
-
-    doc.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4.landscape,
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              _buildHeader("RAPPORT FINANCIER GLOBAL"),
-              pw.SizedBox(height: 20),
-
-              pw.TableHelper.fromTextArray(
-                context: context,
-                border: null,
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-                headerDecoration: const pw.BoxDecoration(color: PdfColors.blue900),
-                rowDecoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300))),
-                cellAlignment: pw.Alignment.centerLeft,
-                headers: <String>['Appartement', 'Résident', 'Solde (DH)', 'Statut'],
-                data: users.map((user) {
-                  final balance = (user.balance as num).toDouble();
-                  final status = balance < 0 ? 'EN RETARD' : 'À JOUR';
-                  return [
-                    user.apartmentNumber?.toString() ?? '-',
-                    user.name,
-                    balance.toStringAsFixed(2),
-                    status
-                  ];
-                }).toList(),
-              ),
-
-              pw.Spacer(),
-              pw.Divider(),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text("Généré par le système Amandier B - God Mode"),
-                  pw.Text("Total Trésorerie: ${users.fold(0.0, (sum, u) => sum + (u.balance as num)).toStringAsFixed(2)} DH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => doc.save(),
-    );
-  }
-
+  // REDESIGNED RECEIPT (Section 5)
   Future<void> generateReceipt({
     required int transactionId,
     required String residentName,
@@ -192,56 +136,110 @@ class PdfGeneratorService {
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a5,
       build: (context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            _buildHeader("REÇU DE PAIEMENT N° $transactionId"),
-            pw.SizedBox(height: 20),
-            _buildInfoRow("DATE", dateStr),
-            _buildInfoRow("SYNDIC", _syndicName),
-            pw.SizedBox(height: 10),
-            pw.Divider(),
-            pw.SizedBox(height: 10),
-            _buildInfoRow("REÇU DE", "$residentName (Lot $lotNumber)"),
-            _buildInfoRow("MONTANT", "$amount DH"),
-            _buildInfoRow("MODE", mode),
-            _buildInfoRow("OBJET", "Cotisation $period"),
-            pw.SizedBox(height: 15),
-            pw.Container(
-              padding: const pw.EdgeInsets.all(8),
-              decoration: pw.BoxDecoration(border: pw.Border.all()),
-              child: pw.Row(
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(20),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.blue900, width: 2),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              // Header
+              pw.Text(_residenceName.toUpperCase(), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
+              pw.SizedBox(height: 10),
+              pw.Text("QUITTANCE DE PAIEMENT", style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
+              pw.Text("N° R-$transactionId", style: const pw.TextStyle(fontSize: 12, color: PdfColors.red)),
+              pw.SizedBox(height: 20),
+
+              // Date Row
+              pw.Align(alignment: pw.Alignment.centerRight, child: pw.Text("Casablanca, le $dateStr")),
+              pw.SizedBox(height: 20),
+
+              // Main Table
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.black),
+                children: [
+                  pw.TableRow(children: [
+                    _tableCell("Reçu de :", isHeader: true),
+                    _tableCell("$residentName (Appartement $lotNumber)"),
+                  ]),
+                  pw.TableRow(children: [
+                    _tableCell("Somme de :", isHeader: true),
+                    _tableCell("${amount.toStringAsFixed(2)} DH"),
+                  ]),
+                  pw.TableRow(children: [
+                    _tableCell("Mode de règlement :", isHeader: true),
+                    _tableCell(mode),
+                  ]),
+                  pw.TableRow(children: [
+                    _tableCell("Motif :", isHeader: true),
+                    _tableCell("Cotisation / Charge - Période: $period"),
+                  ]),
+                ]
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Balance Info
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                color: PdfColors.grey200,
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("Ancien Solde: $oldBalance DH"),
+                    pw.Text("Nouveau Solde: $newBalance DH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  ],
+                ),
+              ),
+
+              pw.Spacer(),
+
+              // Footer
+              pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("Ancien: $oldBalance DH", style: const pw.TextStyle(fontSize: 10)),
-                  pw.Text("->"),
-                  pw.Text("Nouveau: $newBalance DH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text("Pour le Syndic,", style: pw.TextStyle(fontStyle: pw.FontStyle.italic)),
+                      if (cachetImage != null)
+                         pw.Container(width: 60, height: 60, child: pw.Image(cachetImage))
+                      else
+                         pw.SizedBox(height: 40),
+                      pw.Text(_syndicName, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text("Visa", style: const pw.TextStyle(fontSize: 10)),
+                    ],
+                  ),
                 ],
               ),
-            ),
-            pw.Spacer(),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Text("Signature du Syndic:", style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10)),
-                if (cachetImage != null)
-                   pw.Container(
-                     width: 80,
-                     height: 80,
-                     child: pw.Image(cachetImage),
-                   ),
-              ]
-            ),
-            pw.SizedBox(height: 20),
-          ],
+              pw.SizedBox(height: 10),
+              pw.Text("Généré par L'Amandier App", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
+            ],
+          ),
         );
       },
     ));
 
-    await Printing.layoutPdf(onLayout: (format) => doc.save());
+    await Printing.layoutPdf(onLayout: (format) => doc.save(), name: "Quittance_$transactionId.pdf");
   }
 
+  pw.Widget _tableCell(String text, {bool isHeader = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal)
+      ),
+    );
+  }
+
+  // Legacy (preserved for compatibility if called elsewhere)
   Future<void> generateWarningLetter({
     required String residentName,
     required double debtAmount,
@@ -347,19 +345,6 @@ class PdfGeneratorService {
           ],
         ),
       ],
-    );
-  }
-
-  pw.Widget _buildInfoRow(String label, String value) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 4),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.SizedBox(width: 150, child: pw.Text("$label :", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-          pw.Expanded(child: pw.Text(value)),
-        ],
-      ),
     );
   }
 }
