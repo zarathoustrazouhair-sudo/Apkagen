@@ -26,7 +26,7 @@ class BlogFeedScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.lock, size: 64, color: AppPalettes.red.withOpacity(0.5)),
+              Icon(Icons.lock, size: 64, color: AppPalettes.red.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               const Text("ACCÈS RÉSERVÉ AUX RÉSIDENTS", style: TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold)),
             ],
@@ -50,7 +50,7 @@ class BlogFeedScreen extends ConsumerWidget {
               final post = posts[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 24),
-                child: _buildPostCard(context, post),
+                child: _buildPostCard(context, ref, post, userRole),
               );
             },
           );
@@ -71,9 +71,9 @@ class BlogFeedScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPostCard(BuildContext context, PostEntity post) {
-    // Identity formatting: ensure it looks professional
-    // Assuming backend or repository formatted it, but we can enforce style here
+  Widget _buildPostCard(BuildContext context, WidgetRef ref, PostEntity post, UserRole userRole) {
+    // MODERATION: Syndic can delete ANY post. Author (not strictly checked here without ID, assuming Syndic for now)
+    final canDelete = userRole == UserRole.syndic;
 
     return LuxuryCard(
       padding: EdgeInsets.zero,
@@ -87,13 +87,38 @@ class BlogFeedScreen extends ConsumerWidget {
               children: [
                 const CircleAvatar(backgroundColor: AppPalettes.gold, radius: 16, child: Icon(Icons.person, size: 16, color: AppPalettes.navy)),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(post.author, style: const TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(timeago.format(post.createdAt), style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.5), fontSize: 10)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(post.author, style: const TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(timeago.format(post.createdAt), style: TextStyle(color: AppPalettes.offWhite.withValues(alpha: 0.5), fontSize: 10)),
+                    ],
+                  ),
                 ),
+                if (canDelete)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppPalettes.navy,
+                          title: const Text("Supprimer ?", style: TextStyle(color: Colors.white)),
+                          content: const Text("Cette action est irréversible.", style: TextStyle(color: Colors.white70)),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("ANNULER")),
+                            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("SUPPRIMER", style: TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        await ref.read(blogRepositoryProvider).deletePost(post.id);
+                        ref.invalidate(blogPostsProvider); // Refresh list
+                      }
+                    },
+                  ),
               ],
             ),
           ),

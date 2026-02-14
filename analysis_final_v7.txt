@@ -1,0 +1,128 @@
+Analyzing app...
+
+   info • Use 'const' with the constructor to improve performance • lib/core/services/pdf_generator_service.dart:48:74 • prefer_const_constructors
+warning • The value of the local variable 'statusColor' isn't used • lib/core/services/pdf_generator_service.dart:62:25 • unused_local_variable
+   info • 'SyncManagerRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/core/sync/sync_manager.dart:11:25 • deprecated_member_use_from_same_package
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_theme.dart:51:27 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_theme.dart:57:29 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_theme.dart:59:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_theme.dart:66:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_theme.dart:67:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_widgets.dart:26:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_widgets.dart:29:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_widgets.dart:34:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/luxury_widgets.dart:77:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_button.dart:33:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_card.dart:21:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_card.dart:24:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_card.dart:29:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_text_field.dart:34:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_text_field.dart:51:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_text_field.dart:53:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_text_field.dart:56:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/theme/widgets/luxury_text_field.dart:60:59 • deprecated_member_use
+  error • The argument type 'TextColumn' can't be assigned to the parameter type 'GeneratedColumn<Object>'.  • lib/data/local/database.dart:71:34 • argument_type_not_assignable
+  error • The argument type 'IntColumn' can't be assigned to the parameter type 'GeneratedColumn<Object>'.  • lib/data/local/database.dart:72:34 • argument_type_not_assignable
+   info • 'AppDatabaseRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/data/local/database.dart:176:25 • deprecated_member_use_from_same_package
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/admin/presentation/user_management_screen.dart:69:60 • deprecated_member_use
+   info • 'AuthRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/auth/data/auth_repository.dart:8:31 • deprecated_member_use_from_same_package
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/auth/presentation/login_screen.dart:176:29 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/auth/presentation/login_screen.dart:199:33 • deprecated_member_use
+warning • Unused import: 'package:residence_lamandier_b/core/sync/mutation_queue_entity.dart' • lib/features/blog/data/blog_repository.dart:10:8 • unused_import
+   info • 'BlogRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/blog/data/blog_repository.dart:15:31 • deprecated_member_use_from_same_package
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:35:37 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:67:20 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:70:29 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:83:37 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:104:20 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:131:24 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:136:29 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:143:20 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/blog/data/blog_repository.dart:147:29 • unnecessary_non_null_assertion
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/create_post_screen.dart:109:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/create_post_screen.dart:145:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/post_detail_screen.dart:85:116 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/post_detail_screen.dart:92:82 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/post_detail_screen.dart:95:111 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/blog/presentation/post_detail_screen.dart:96:44 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/blog/presentation/post_detail_screen.dart:96:83 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/blog/presentation/post_detail_screen.dart:97:46 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/blog/presentation/post_detail_screen.dart:97:63 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/blog/presentation/post_detail_screen.dart:115:76 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/cockpit_screen.dart:91:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/cockpit_screen.dart:106:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/apartment_grid.dart:39:86 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/apartment_grid.dart:62:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/apartment_grid.dart:67:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:46:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:77:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:81:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:127:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:128:55 • deprecated_member_use
+warning • The value of the local variable 'monthIndex' isn't used • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:156:11 • unused_local_variable
+   info • Statements in a while should be enclosed in a block • lib/features/dashboard/presentation/widgets/charts/cashflow_curve.dart:159:19 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/charts/recovery_disk.dart:23:40 • deprecated_member_use
+  error • The getter 'type' isn't defined for the type 'Task' • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:34:56 • undefined_getter
+  error • The getter 'type' isn't defined for the type 'Task' • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:38:52 • undefined_getter
+  error • The getter 'type' isn't defined for the type 'Task' • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:38:72 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:49:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:49:93 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:51:80 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:51:112 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:67:38 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:91:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/cockpit_active_widgets.dart:100:74 • deprecated_member_use
+   info • The imported package 'intl' isn't a dependency of the importing package • lib/features/dashboard/presentation/widgets/kpi_cards.dart:3:8 • depend_on_referenced_packages
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/kpi_cards.dart:31:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/kpi_cards.dart:66:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/reminder_row.dart:28:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/reminder_row.dart:51:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/reminder_row.dart:69:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/reminder_row.dart:87:76 • deprecated_member_use
+warning • Unused import: 'package:drift/drift.dart' • lib/features/dashboard/presentation/widgets/syndic_mood_widget.dart:5:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/syndic_mood_widget.dart:47:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/syndic_mood_widget.dart:49:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/syndic_mood_widget.dart:58:91 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/documents/presentation/documents_screen.dart:72:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/finance/presentation/add_transaction_screen.dart:77:75 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/finance/presentation/add_transaction_screen.dart:102:25 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/finance/presentation/add_transaction_screen.dart:162:21 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/features/finance/presentation/add_transaction_screen.dart:304:31 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/finance/presentation/finance_screen.dart:90:125 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/wizard_screen.dart:50:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/wizard_screen.dart:138:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/wizard_screen.dart:161:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/residents/presentation/resident_detail_screen.dart:212:119 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/residents/presentation/resident_detail_screen.dart:214:101 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/residents/presentation/resident_detail_screen.dart:306:72 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/residents/presentation/residents_screen.dart:56:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/residents/presentation/residents_screen.dart:56:94 • deprecated_member_use
+   info • 'AppSettingsRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/settings/data/app_settings_repository.dart:7:45 • deprecated_member_use_from_same_package
+   info • 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/features/sos/presentation/slide_sos_button.dart:41:11 • deprecated_member_use
+   info • 'timeLimit' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/features/sos/presentation/slide_sos_button.dart:42:11 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/sos/presentation/slide_sos_button.dart:93:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/sos/presentation/slide_sos_button.dart:123:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/sos/presentation/slide_sos_button.dart:125:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/sos/presentation/slide_sos_button.dart:133:42 • deprecated_member_use
+   info • 'ActiveTaskCountRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/tasks/presentation/tasks_viewmodel.dart:33:29 • deprecated_member_use_from_same_package
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/tasks/presentation/todo_widget.dart:26:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/tasks/presentation/todo_widget.dart:57:67 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/concierge_shell.dart:36:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/concierge_shell.dart:49:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/concierge_shell.dart:78:58 • deprecated_member_use
+warning • Unused import: 'package:residence_lamandier_b/core/theme/widgets/luxury_button.dart' • lib/presentation/shells/resident_shell.dart:9:8 • unused_import
+warning • Unused import: 'package:residence_lamandier_b/features/tasks/data/task_entity.dart' • lib/presentation/shells/resident_shell.dart:11:8 • unused_import
+  error • The named parameter 'maxLines' isn't defined • lib/presentation/shells/resident_shell.dart:76:73 • undefined_named_parameter
+  error • The getter 'red' isn't defined for the type 'AppTheme' • lib/presentation/shells/resident_shell.dart:82:71 • undefined_getter
+  error • The named parameter 'type' isn't defined • lib/presentation/shells/resident_shell.dart:88:21 • undefined_named_parameter
+   info • Use 'const' with the constructor to improve performance • lib/presentation/shells/resident_shell.dart:88:27 • prefer_const_constructors
+   info • Use 'const' for final variables initialized to a constant value • lib/presentation/shells/resident_shell.dart:107:5 • prefer_const_declarations
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/resident_shell.dart:142:86 • deprecated_member_use
+  error • The getter 'red' isn't defined for the type 'AppTheme' • lib/presentation/shells/resident_shell.dart:149:141 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/resident_shell.dart:172:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/resident_shell.dart:174:61 • deprecated_member_use
+   info • Use 'const' for final variables initialized to a constant value • lib/presentation/shells/resident_shell.dart:204:5 • prefer_const_declarations
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/shells/resident_shell.dart:222:103 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/presentation/shells/resident_shell.dart:238:35 • prefer_const_constructors
+
+124 issues found. (ran in 17.4s)

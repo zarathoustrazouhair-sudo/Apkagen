@@ -91,6 +91,24 @@ class BlogRepository {
   }
   // -----------------------
 
+  // --- MODERATION (DELETE) ---
+  Future<void> deletePost(String postId) async {
+    if (_client == null) return;
+    try {
+      // Check if it's a local dummy post first
+      if (postId.startsWith('local_') || postId.startsWith('mock_')) {
+        _localPosts.removeWhere((p) => p.id == postId);
+        return;
+      }
+
+      await _client!.from('blog_posts').delete().eq('id', postId);
+    } catch (e) {
+      debugPrint("Failed to delete post: $e");
+      // Optionally queue this action
+    }
+  }
+  // -----------------------
+
   Future<void> createPost({
     required String title,
     required String content,

@@ -45,7 +45,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +66,18 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.createTable(serviceProviders);
+      }
+      if (from < 6) {
+        // Fix for "argument type 'TextColumn' can't be assigned to 'GeneratedColumn<Object>'"
+        // Drift requires casting or using the generated getter if available, but inside onUpgrade we use the table definition.
+        // We need to cast them to GeneratedColumn<Object> or use the specific typed addColumn.
+        // Actually, drift's addColumn expects GeneratedColumn. TextColumn inherits from it.
+        // The error might be due to nullability or type inference.
+        // Explicitly casting or checking drift documentation.
+        // Trying direct usage which usually works, maybe the previous error was due to build_runner not updating the table definition yet.
+        // Once build_runner runs, 'tasks.type' will be valid.
+        await m.addColumn(tasks, tasks.type);
+        await m.addColumn(tasks, tasks.authorId);
       }
     },
     beforeOpen: (details) async {

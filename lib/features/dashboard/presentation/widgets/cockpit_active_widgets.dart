@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:residence_lamandier_b/core/theme/app_palettes.dart';
 import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/syndic_mood_widget.dart';
 
 class CockpitActiveWidgets extends ConsumerWidget {
   final bool hideFinance;
@@ -16,72 +17,25 @@ class CockpitActiveWidgets extends ConsumerWidget {
       children: [
         // 1. SURVIVAL EMOJI ROW (FINANCE) - HIDDEN IF hideFinance
         if (!hideFinance)
-          StreamBuilder<List<Transaction>>(
-            stream: db.select(db.transactions).watch(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-
-              final txs = snapshot.data!;
-              double cash = 0.0;
-              for (var tx in txs) {
-                if (tx.type == 'income') cash += tx.amount;
-                if (tx.type == 'expense') cash -= tx.amount;
-              }
-
-              String emoji = "😐";
-              String status = "STABLE";
-              Color color = Colors.orange;
-
-              if (cash > 50000) {
-                emoji = "🤑";
-                status = "RICHE";
-                color = Colors.greenAccent;
-              } else if (cash > 10000) {
-                emoji = "😎";
-                status = "CONFORT";
-                color = Colors.green;
-              } else if (cash < 0) {
-                emoji = "💀";
-                status = "CRITIQUE";
-                color = Colors.red;
-              }
-
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppPalettes.offBlack.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withOpacity(0.5)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded( // Prevent text overflow
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("SANTÉ FINANCIÈRE", style: TextStyle(color: AppPalettes.offWhite.withOpacity(0.7), fontSize: 10)),
-                          Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    ),
-                    Text(emoji, style: const TextStyle(fontSize: 32)),
-                    const SizedBox(width: 8),
-                    Text("${cash.toStringAsFixed(0)} DH", style: const TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold, fontSize: 16)),
-                  ],
-                ),
-              );
-            },
-          ),
+          const SyndicMoodWidget(),
 
         if (!hideFinance) const SizedBox(height: 16),
 
         // 2. INCIDENTS & TASKS
         StreamBuilder<List<Task>>(
-          stream: (db.select(db.tasks)..where((t) => t.isCompleted.not())).watch(),
+          stream: (db.select(db.tasks)
+            ..where((t) => t.isCompleted.not())
+            ..orderBy([(t) => drift.OrderingTerm(expression: t.createdAt, mode: drift.OrderingMode.desc)])
+          ).watch(),
           builder: (context, snapshot) {
             final tasks = snapshot.data ?? [];
-            final incidentCount = tasks.length;
+
+            // FILTER: Real Incidents (type = 'incident')
+            final realIncidents = tasks.where((t) => t.type == 'incident').toList();
+            final incidentCount = realIncidents.length;
+
+            // FILTER: Tasks/Todos (type = 'todo')
+            final todoTasks = tasks.where((t) => t.type == 'todo' || t.type == null).toList();
 
             return Row(
               children: [
@@ -90,25 +44,35 @@ class CockpitActiveWidgets extends ConsumerWidget {
                   flex: 1,
                   child: Container(
                     height: 100,
-                    padding: const EdgeInsets.all(8), // Reduced padding
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.2),
+                      color: incidentCount > 0 ? Colors.red.withOpacity(0.2) : Colors.green.withOpacity(0.2), // Green if 0 incidents
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.5)),
+                      border: Border.all(color: incidentCount > 0 ? Colors.red.withOpacity(0.5) : Colors.green.withOpacity(0.5)),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+                        Icon(
+                          incidentCount > 0 ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                          color: incidentCount > 0 ? Colors.red : Colors.green,
+                          size: 24
+                        ),
                         const SizedBox(height: 4),
-                         // FIX OVERFLOW: Using FittedBox and Flexible
                         Expanded(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text("$incidentCount", style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              "$incidentCount",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold
+                              )
+                            ),
                           ),
                         ),
-                        const Text("INCIDENTS", style: TextStyle(color: Colors.redAccent, fontSize: 8), overflow: TextOverflow.ellipsis),
+                        const Text("INCIDENTS", style: TextStyle(color: Colors.white70, fontSize: 8), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -137,15 +101,15 @@ class CockpitActiveWidgets extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        if (tasks.isEmpty)
+                        if (todoTasks.isEmpty)
                           const Center(child: Text("Rien à signaler", style: TextStyle(color: Colors.grey, fontSize: 10)))
                         else
                           Expanded(
                             child: ListView.builder(
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: tasks.take(2).length,
+                              itemCount: todoTasks.take(2).length,
                               itemBuilder: (context, index) {
-                                final task = tasks[index];
+                                final task = todoTasks[index];
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 4.0),
                                   child: Row(

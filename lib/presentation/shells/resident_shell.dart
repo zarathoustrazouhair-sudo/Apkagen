@@ -8,6 +8,7 @@ import 'package:residence_lamandier_b/data/local/database.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_button.dart';
 import 'package:residence_lamandier_b/core/theme/widgets/luxury_text_field.dart';
+import 'package:residence_lamandier_b/features/dashboard/presentation/widgets/syndic_mood_widget.dart';
 
 class ResidentShell extends ConsumerStatefulWidget {
   const ResidentShell({super.key});
@@ -21,8 +22,8 @@ class _ResidentShellState extends ConsumerState<ResidentShell> {
   final List<Widget> _screens = [
     const MyApartmentScreen(),
     const BlogFeedScreen(),
-    const DocumentsScreen(), // Replaced placeholder
-    const ResidentProfileScreen(), // Replaced placeholder
+    const DocumentsScreen(),
+    const ResidentProfileScreen(),
   ];
 
   @override
@@ -43,26 +44,10 @@ class _ResidentShellState extends ConsumerState<ResidentShell> {
           type: BottomNavigationBarType.fixed,
           showUnselectedLabels: true,
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'MON APPART',
-            ),
-             BottomNavigationBarItem(
-              icon: Icon(Icons.article_outlined),
-              activeIcon: Icon(Icons.article),
-              label: 'ACTUALITÉS',
-            ),
-             BottomNavigationBarItem(
-              icon: Icon(Icons.folder_open),
-              activeIcon: Icon(Icons.folder),
-              label: 'DOCS',
-            ),
-             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'PROFIL',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'MON APPART'),
+            BottomNavigationBarItem(icon: Icon(Icons.article_outlined), activeIcon: Icon(Icons.article), label: 'ACTUALITÉS'),
+            BottomNavigationBarItem(icon: Icon(Icons.folder_open), activeIcon: Icon(Icons.folder), label: 'DOCS'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'PROFIL'),
           ],
         ),
       ),
@@ -70,29 +55,78 @@ class _ResidentShellState extends ConsumerState<ResidentShell> {
   }
 }
 
-// -----------------------------------------------------------------------------
-// MY APARTMENT (HOME)
-// -----------------------------------------------------------------------------
 class MyApartmentScreen extends ConsumerWidget {
   const MyApartmentScreen({super.key});
 
+  void _showReportIncidentDialog(BuildContext context, WidgetRef ref) {
+    final descCtrl = TextEditingController();
+    final db = ref.read(appDatabaseProvider);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkNavy,
+        title: const Text("Signaler un Incident", style: TextStyle(color: AppTheme.gold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Décrivez le problème (Fuite, Panne, etc.)", style: TextStyle(color: Colors.white70, fontSize: 12)),
+            const SizedBox(height: 10),
+            // LuxuryTextField usually doesn't have maxLines, using basic TextField or wrapper if needed.
+            // Assuming standard TextField for now or fixing LuxuryTextField elsewhere.
+            // Using standard TextField with Luxury styling decoration to avoid error if LuxuryTextField lacks maxLines.
+            TextField(
+              controller: descCtrl,
+              maxLines: 3,
+              style: const TextStyle(color: AppTheme.offWhite),
+              decoration: InputDecoration(
+                labelText: "Description",
+                labelStyle: TextStyle(color: AppTheme.gold.withValues(alpha: 0.8)),
+                filled: true,
+                fillColor: AppTheme.darkNavy.withValues(alpha: 0.5),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3))),
+                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppTheme.gold)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("ANNULER", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed), // Fixed: AppTheme.red -> AppTheme.errorRed
+            onPressed: () async {
+              if (descCtrl.text.isNotEmpty) {
+                // 'type' and 'authorId' will be available after build_runner runs.
+                // We assume they are generated correctly.
+                await db.into(db.tasks).insert(
+                  TasksCompanion.insert(
+                    description: descCtrl.text,
+                    type: drift.Value('incident'), // Will work after codegen
+                    isCompleted: const drift.Value(false),
+                  ),
+                );
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Incident signalé au Syndic !")));
+                }
+              }
+            },
+            child: const Text("SIGNALER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Ideally fetch logged in user from a proper AuthProvider.
-    // For MVP, we might mock or grab the first resident logic if strict Auth isn't fully piped.
-    // But since LoginScreen sets the UserRole, we don't have the ID in a global provider yet.
-    // Let's assume we are viewing a generic resident dashboard or using a mock for "M. Amrani".
+    final myId = 1;
+    final db = ref.watch(appDatabaseProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
       appBar: AppBar(
-        title: Text(
-          'MON APPARTEMENT',
-          style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(
-            color: AppTheme.gold,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text('MON APPARTEMENT', style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(color: AppTheme.gold, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -103,18 +137,15 @@ class MyApartmentScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Header
-            const Text(
-              "Bonjour, Résident", // Generic fallback
-              style: TextStyle(
-                color: AppTheme.offWhite,
-                fontSize: 24,
-                fontFamily: 'Playfair Display',
-              ),
+            StreamBuilder<User?>(
+              stream: (db.select(db.users)..where((t) => t.id.equals(myId))).watchSingleOrNull(),
+              builder: (context, snapshot) {
+                final user = snapshot.data;
+                return Text("Bonjour, ${user?.name ?? 'Résident'}", style: const TextStyle(color: AppTheme.offWhite, fontSize: 24, fontFamily: 'Playfair Display'));
+              }
             ),
             const SizedBox(height: 24),
 
-            // Balance Card
             LuxuryCard(
               padding: const EdgeInsets.all(24),
               child: Row(
@@ -123,24 +154,15 @@ class MyApartmentScreen extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "SOLDE ACTUEL",
-                        style: TextStyle(
-                          color: AppTheme.offWhite.withOpacity(0.6),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
+                      Text("SOLDE ACTUEL", style: TextStyle(color: AppTheme.offWhite.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                       const SizedBox(height: 8),
-                      const Text(
-                        "0.00 DH",
-                        style: TextStyle(
-                          color: Color(0xFF00E5FF), // Cyan for OK
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Playfair Display',
-                        ),
+                      StreamBuilder<User?>(
+                        stream: (db.select(db.users)..where((t) => t.id.equals(myId))).watchSingleOrNull(),
+                        builder: (context, snapshot) {
+                          final balance = snapshot.data?.balance ?? 0.0;
+                          final isOk = balance >= 0;
+                          return Text("${balance.toStringAsFixed(2)} DH", style: TextStyle(color: isOk ? const Color(0xFF00E5FF) : AppTheme.errorRed, fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Playfair Display'));
+                        }
                       ),
                     ],
                   ),
@@ -150,14 +172,19 @@ class MyApartmentScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // SOS Button (Slide Action Placeholder)
+            const Text("SANTÉ DU SYNDIC", style: TextStyle(color: AppTheme.gold, fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const SyndicMoodWidget(),
+
+            const SizedBox(height: 24),
+
             Container(
               width: double.infinity,
               height: 60,
               decoration: BoxDecoration(
-                color: AppTheme.errorRed.withOpacity(0.2),
+                color: AppTheme.errorRed.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+                border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.5)),
               ),
               child: const Center(
                 child: Row(
@@ -165,14 +192,7 @@ class MyApartmentScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.sos, color: AppTheme.errorRed),
                     SizedBox(width: 8),
-                    Text(
-                      "SOS URGENCES",
-                      style: TextStyle(
-                        color: AppTheme.errorRed,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
+                    Text("SOS URGENCES", style: TextStyle(color: AppTheme.errorRed, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                   ],
                 ),
               ),
@@ -181,58 +201,39 @@ class MyApartmentScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Report Incident
-        },
+        onPressed: () => _showReportIncidentDialog(context, ref),
         backgroundColor: AppTheme.gold,
         label: const Text("SIGNALER INCIDENT", style: TextStyle(color: AppTheme.darkNavy, fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.build, color: AppTheme.darkNavy),
+        icon: const Icon(Icons.warning_amber, color: AppTheme.darkNavy),
       ),
     );
   }
 }
 
-// -----------------------------------------------------------------------------
-// RESIDENT PROFILE (SELF-EDIT)
-// -----------------------------------------------------------------------------
 class ResidentProfileScreen extends ConsumerWidget {
   const ResidentProfileScreen({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // In a real app, grab ID from AuthProvider. Here, we mock ID=1 for demo self-edit.
     final myId = 1;
     final db = ref.watch(appDatabaseProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.darkNavy,
-      appBar: AppBar(
-        title: Text("MON PROFIL", style: AppTheme.luxuryTheme.textTheme.headlineMedium?.copyWith(color: AppTheme.gold, fontSize: 18)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: AppBar(title: const Text("MON PROFIL", style: TextStyle(color: AppTheme.gold)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true, automaticallyImplyLeading: false),
       body: StreamBuilder<User?>(
         stream: (db.select(db.users)..where((t) => t.id.equals(myId))).watchSingleOrNull(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final user = snapshot.data!;
-
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppTheme.gold,
-                  child: Icon(Icons.person, size: 50, color: AppTheme.darkNavy),
-                ),
+                const CircleAvatar(radius: 50, backgroundColor: AppTheme.gold, child: Icon(Icons.person, size: 50, color: AppTheme.darkNavy)),
                 const SizedBox(height: 16),
                 Text(user.name, style: const TextStyle(color: AppTheme.offWhite, fontSize: 20, fontWeight: FontWeight.bold)),
-                Text("Appartement ${user.apartmentNumber}", style: TextStyle(color: AppTheme.offWhite.withOpacity(0.7))),
+                Text("Appartement ${user.apartmentNumber}", style: TextStyle(color: AppTheme.offWhite.withValues(alpha: 0.7))),
                 const SizedBox(height: 32),
-
                 LuxuryCard(
                   child: Column(
                     children: [
@@ -254,16 +255,6 @@ class ResidentProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                LuxuryButton(
-                  label: "DÉCONNEXION",
-                  onPressed: () {
-                    // Navigate back to login
-                    // ref.read(userRoleProvider.notifier).state = ... (reset if needed)
-                    // context.go('/login');
-                  },
-                  // style: red button...
-                )
               ],
             ),
           );
@@ -272,14 +263,7 @@ class ResidentProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditFieldDialog(
-    BuildContext context,
-    WidgetRef ref,
-    User user,
-    String label,
-    String? currentValue,
-    UsersCompanion Function(String) companionBuilder,
-  ) {
+  void _showEditFieldDialog(BuildContext context, WidgetRef ref, User user, String label, String? currentValue, UsersCompanion Function(String) companionBuilder) {
     final ctrl = TextEditingController(text: currentValue);
     showDialog(
       context: context,
