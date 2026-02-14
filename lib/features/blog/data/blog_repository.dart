@@ -13,12 +13,10 @@ part 'blog_repository.g.dart';
 
 @riverpod
 BlogRepository blogRepository(BlogRepositoryRef ref) {
-  // Gracefully handle missing Supabase instance for tests/demos
   final db = ref.watch(appDatabaseProvider);
   try {
     return BlogRepository(Supabase.instance.client, db);
   } catch (e) {
-    // If Supabase not initialized, mock it with null client
     return BlogRepository(null, db);
   }
 }
@@ -26,17 +24,11 @@ BlogRepository blogRepository(BlogRepositoryRef ref) {
 class BlogRepository {
   final SupabaseClient? _client;
   final AppDatabase _db;
-  // Simple in-memory cache for immediate UX feedback
   final List<PostEntity> _localPosts = [];
 
   BlogRepository(this._client, this._db);
 
   Future<List<PostEntity>> getPosts({required UserRole userRole}) async {
-    // STRICT SECURITY: Concierge CANNOT see the blog (as per previous logic, but TEP says "Lecture" allowed for Concierge?)
-    // TEP UPDATE: "Concierge: Lecture | Résident: Lecture/Post"
-    // So Concierge CAN see posts. Removing previous restriction or adjusting.
-    // TEP Table says: Concierge -> Lecture.
-
     try {
       if (_client == null) throw Exception("Offline Mode");
 
@@ -60,14 +52,44 @@ class BlogRepository {
         );
       }).toList();
 
-      // Merge local pending posts on top
       return [..._localPosts, ...remotePosts];
 
     } catch (e) {
-      // Fallback to local + dummy data if offline or error
       return [..._localPosts, ..._getDummyPosts()];
     }
   }
+
+  // --- SEEN BY FEATURE ---
+  Future<void> markPostAsSeen(String postId) async {
+    if (_client == null) return;
+    try {
+      // Upsert view
+      await _client!.from('post_views').upsert(
+        {
+          'post_id': int.tryParse(postId) ?? 0,
+          'user_id': _client!.auth.currentUser!.id,
+          'seen_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'post_id, user_id'
+      );
+    } catch (e) {
+      debugPrint("Failed to mark post as seen: $e");
+    }
+  }
+
+  Future<int> getPostViewCount(String postId) async {
+    if (_client == null) return 0;
+    try {
+      final response = await _client!
+          .from('post_views')
+          .count(CountOption.exact)
+          .eq('post_id', int.tryParse(postId) ?? 0);
+      return response;
+    } catch (e) {
+      return 0;
+    }
+  }
+  // -----------------------
 
   Future<void> createPost({
     required String title,
@@ -75,7 +97,6 @@ class BlogRepository {
     required UserRole userRole,
     File? imageFile,
   }) async {
-    // Permission Check: Syndic, Adjoint, Resident can post. Concierge? TEP says "Lecture".
     if (userRole == UserRole.concierge) {
       throw Exception("ACCESS_DENIED: Concierge cannot create posts.");
     }
@@ -97,8 +118,6 @@ class BlogRepository {
           imageUrl = _client!.storage.from('blog_images').getPublicUrl(fileName);
         } catch (uploadError) {
           debugPrint("BlogRepository: Upload failed ($uploadError). Using local path as fallback.");
-          // We continue to insert the post, but use the local path for immediate display?
-          // No, Supabase needs a URL. If upload fails, we must treat the whole operation as offline/pending.
           throw Exception("Upload Failed");
         }
       }
@@ -113,20 +132,16 @@ class BlogRepository {
     } catch (e) {
       debugPrint("BlogRepository: Backend error ($e). Saving locally and queuing.");
 
-      // 1. Memory Cache (Immediate UX)
-      // Use local file path as imageUrl for display in this session
       final newPost = PostEntity(
         id: "local_${DateTime.now().millisecondsSinceEpoch}",
         title: title,
         content: content,
         author: "Moi (En attente)",
-        imageUrl: localImagePath, // Display local image
+        imageUrl: localImagePath,
         createdAt: DateTime.now(),
       );
       _localPosts.insert(0, newPost);
 
-      // 2. Persistent Mutation Queue (Real Offline Support)
-      // We serialize the intention. A sync service would pick this up later.
       final payload = {
         'title': title,
         'content': content,

@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:residence_lamandier_b/features/settings/data/app_settings_repository.dart';
+import 'package:residence_lamandier_b/data/local/database.dart';
 
 class PdfGeneratorService {
   final AppSettingsRepository _settingsRepo;
@@ -11,12 +12,116 @@ class PdfGeneratorService {
 
   PdfGeneratorService(this._settingsRepo);
 
+  // New Feature: Hall State Sheet (A4 Landscape)
+  Future<void> generateHallState(List<User> users, DateTime month) async {
+    final doc = pw.Document();
+    final now = DateTime.now();
+    final dateStr = "${now.day}/${now.month}/${now.year}";
+    final monthStr = "${month.month}/${month.year}";
+
+    final cachetPath = await _settingsRepo.getSetting('cachet_path');
+    pw.MemoryImage? cachetImage;
+    if (cachetPath != null && File(cachetPath).existsSync()) {
+      cachetImage = pw.MemoryImage(File(cachetPath).readAsBytesSync());
+    }
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        build: (context) {
+          double totalDebt = 0.0;
+          for (var u in users) {
+            if (u.balance < 0) totalDebt += u.balance.abs();
+          }
+
+          return pw.Column(
+            children: [
+              // Header
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(_residenceName, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                  pw.Text("SITUATION AU $dateStr", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text("ÉTAT DES COTISATIONS - PÉRIODE $monthStr", style: pw.TextStyle(fontSize: 16, decoration: pw.TextDecoration.underline)),
+              pw.SizedBox(height: 20),
+
+              // Table
+              pw.TableHelper.fromTextArray(
+                context: context,
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                headerDecoration: const pw.BoxDecoration(color: PdfColors.blue900),
+                rowDecoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300))),
+                cellAlignment: pw.Alignment.centerLeft,
+                headers: ['Appartement', 'Propriétaire', 'Statut', 'Solde (DH)'],
+                data: users.map((u) {
+                  final isDebt = u.balance < 0;
+                  final status = isDebt ? 'IMPAYÉ' : 'PAYÉ';
+                  final statusColor = isDebt ? PdfColors.red : PdfColors.green;
+
+                  return [
+                    "AP ${u.apartmentNumber ?? '-'}",
+                    u.name,
+                    status,
+                    u.balance.toStringAsFixed(2),
+                  ];
+                }).toList(),
+              ),
+
+              pw.Spacer(),
+
+              // Footer: Total & Signature
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.red, width: 2),
+                      color: PdfColors.red50,
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("TOTAL À RECOUVRER", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.red)),
+                        pw.Text("${totalDebt.toStringAsFixed(2)} DH", style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.red900)),
+                      ],
+                    ),
+                  ),
+                  pw.Column(
+                    children: [
+                      pw.Text("Le Syndic", style: const pw.TextStyle(fontSize: 12)),
+                      if (cachetImage != null)
+                        pw.Container(width: 80, height: 80, child: pw.Image(cachetImage))
+                      else
+                        pw.SizedBox(height: 50),
+                      pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (format) => doc.save(), name: "Etat_Cotisations_$monthStr.pdf");
+  }
+
+  // OLD METHODS PRESERVED BELOW (generateFinancialReport, generateReceipt, generateWarningLetter)
+  // ... (Keeping previous implementation structure effectively by not overwriting them,
+  // but wait, write_file overwrites. I must include the old methods too.)
+
   Future<void> generateFinancialReport(List<dynamic> users, List<dynamic> transactions, double monthlyFee) async {
     final doc = pw.Document();
 
     doc.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.a4.landscape, // Keep landscape A4 for tables
+        pageFormat: PdfPageFormat.a4.landscape,
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -24,7 +129,6 @@ class PdfGeneratorService {
               _buildHeader("RAPPORT FINANCIER GLOBAL"),
               pw.SizedBox(height: 20),
 
-              // TABLE
               pw.TableHelper.fromTextArray(
                 context: context,
                 border: null,
@@ -34,10 +138,8 @@ class PdfGeneratorService {
                 cellAlignment: pw.Alignment.centerLeft,
                 headers: <String>['Appartement', 'Résident', 'Solde (DH)', 'Statut'],
                 data: users.map((user) {
-                  // user is expected to be a Drift Row or similar
                   final balance = (user.balance as num).toDouble();
                   final status = balance < 0 ? 'EN RETARD' : 'À JOUR';
-
                   return [
                     user.apartmentNumber?.toString() ?? '-',
                     user.name,
@@ -47,7 +149,6 @@ class PdfGeneratorService {
                 }).toList(),
               ),
 
-              // FOOTER
               pw.Spacer(),
               pw.Divider(),
               pw.Row(
@@ -68,13 +169,12 @@ class PdfGeneratorService {
     );
   }
 
-  // FINANCE_RECU
   Future<void> generateReceipt({
     required int transactionId,
     required String residentName,
     required int lotNumber,
     required double amount,
-    required String mode, // Chèque/Espèces
+    required String mode,
     required String period,
     required double oldBalance,
     required double newBalance,
@@ -90,7 +190,7 @@ class PdfGeneratorService {
     }
 
     doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a5, // A5 Format as requested
+      pageFormat: PdfPageFormat.a5,
       build: (context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -142,7 +242,6 @@ class PdfGeneratorService {
     await Printing.layoutPdf(onLayout: (format) => doc.save());
   }
 
-  // OPS_MISE_EN_DEMEURE - ENHANCED
   Future<void> generateWarningLetter({
     required String residentName,
     required double debtAmount,
@@ -160,7 +259,7 @@ class PdfGeneratorService {
     }
 
     doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a5, // A5 Format
+      pageFormat: PdfPageFormat.a5,
       build: (context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -216,7 +315,7 @@ class PdfGeneratorService {
                        child: pw.Image(cachetImage),
                      )
                   else
-                     pw.SizedBox(height: 40), // Placeholder
+                     pw.SizedBox(height: 40),
                   pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
                 ],
               ),

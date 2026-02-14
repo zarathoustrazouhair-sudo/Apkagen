@@ -17,41 +17,64 @@ class BlogFeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userRole = ref.watch(userRoleProvider);
+
+    // STRICT RULE: Concierge CANNOT ACCESS
+    if (userRole == UserRole.concierge) {
+      return Scaffold(
+        backgroundColor: AppPalettes.navy,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock, size: 64, color: AppPalettes.red.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              const Text("ACCÈS RÉSERVÉ AUX RÉSIDENTS", style: TextStyle(color: AppPalettes.offWhite, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      );
+    }
+
     final postsAsync = ref.watch(blogPostsProvider(userRole));
 
     return Scaffold(
       backgroundColor: AppPalettes.navy,
       body: postsAsync.when(
-        data: (posts) => ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: posts.length,
-          itemBuilder: (context, index) {
-            final post = posts[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: _buildPostCard(context, post),
-            );
-          },
-        ),
+        data: (posts) {
+          if (posts.isEmpty) return const Center(child: Text("Aucun article.", style: TextStyle(color: Colors.white)));
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: posts.length,
+            itemBuilder: (context, index) {
+              final post = posts[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: _buildPostCard(context, post),
+              );
+            },
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator(color: AppPalettes.gold)),
         error: (err, stack) => Center(child: Text("Erreur: $err", style: const TextStyle(color: AppPalettes.red))),
       ),
-      floatingActionButton: userRole != UserRole.concierge
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-                );
-              },
-              backgroundColor: AppPalettes.gold,
-              child: const Icon(Icons.add, color: AppPalettes.navy),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+          );
+        },
+        backgroundColor: AppPalettes.gold,
+        child: const Icon(Icons.add, color: AppPalettes.navy),
+      ),
     );
   }
 
   Widget _buildPostCard(BuildContext context, PostEntity post) {
+    // Identity formatting: ensure it looks professional
+    // Assuming backend or repository formatted it, but we can enforce style here
+
     return LuxuryCard(
       padding: EdgeInsets.zero,
       child: Column(
