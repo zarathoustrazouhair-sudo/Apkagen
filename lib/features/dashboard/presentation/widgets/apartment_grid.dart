@@ -44,10 +44,9 @@ class ApartmentGrid extends ConsumerWidget {
                   // Navigate to Resident Detail
                   context.pushNamed('resident_detail', pathParameters: {'id': resident.id.toString()});
                 } else {
-                  // Fallback for empty apartments (should be covered by seeding)
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Appartement $apartmentNumber : Logement Vacant ou Non Attribué'),
+                      content: Text('Appartement $apartmentNumber : Aucun résident assigné.'),
                       backgroundColor: Colors.orange,
                       action: SnackBarAction(label: "Fermer", onPressed: () {}),
                     ),

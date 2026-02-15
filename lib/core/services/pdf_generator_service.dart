@@ -239,7 +239,99 @@ class PdfGeneratorService {
     );
   }
 
-  // Legacy (preserved for compatibility if called elsewhere)
+  // LETTRE DE RELANCE (Simple)
+  Future<void> generateRelanceLetter({
+    required String residentName,
+    required double debtAmount,
+    String? apartmentNumber,
+  }) async {
+    final doc = pw.Document();
+    final now = DateTime.now();
+    final dateStr = "${now.day}/${now.month}/${now.year}";
+
+    final cachetPath = await _settingsRepo.getSetting('cachet_path');
+    pw.MemoryImage? cachetImage;
+    if (cachetPath != null && File(cachetPath).existsSync()) {
+      cachetImage = pw.MemoryImage(File(cachetPath).readAsBytesSync());
+    }
+
+    doc.addPage(pw.Page(
+      pageFormat: PdfPageFormat.a4,
+      build: (context) {
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            _buildHeader("LETTRE DE RELANCE"),
+            pw.SizedBox(height: 40),
+
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text("Casablanca, le $dateStr"),
+                  pw.SizedBox(height: 20),
+                  pw.Text("M./Mme $residentName", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  if (apartmentNumber != null)
+                    pw.Text("Appartement N° $apartmentNumber"),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 60),
+            pw.Text("Objet : Régularisation de votre solde", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
+            pw.SizedBox(height: 20),
+
+            pw.Paragraph(
+              text: "Chère copropriétaire, Cher copropriétaire,\n\n"
+                    "Sauf erreur ou omission de notre part, nous constatons que votre compte présente à ce jour un solde débiteur de :",
+            ),
+
+            pw.SizedBox(height: 20),
+            pw.Center(
+              child: pw.Text(
+                "${debtAmount.toStringAsFixed(2)} DH",
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900
+                )
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            pw.Paragraph(
+              text: "Nous vous invitons à bien vouloir régulariser cette situation dans les meilleurs délais.\n\n"
+                    "Si votre règlement a déjà été effectué entre-temps, nous vous prions de ne pas tenir compte de ce courrier.\n\n"
+                    "Comptant sur votre diligence, nous vous prions d'agréer, l'expression de nos salutations distinguées.",
+            ),
+
+            pw.SizedBox(height: 40),
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Column(
+                children: [
+                  pw.Text("Le Syndic", style: const pw.TextStyle(fontSize: 12)),
+                  if (cachetImage != null)
+                     pw.Container(width: 80, height: 80, child: pw.Image(cachetImage))
+                  else
+                     pw.SizedBox(height: 40),
+                  pw.Text(_syndicName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    ));
+
+    await Printing.layoutPdf(
+      onLayout: (format) => doc.save(),
+      name: "Relance_$residentName.pdf",
+    );
+  }
+
+  // Legacy (preserved for compatibility if called elsewhere, or for harsher letters)
   Future<void> generateWarningLetter({
     required String residentName,
     required double debtAmount,

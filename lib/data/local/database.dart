@@ -68,18 +68,30 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(serviceProviders);
       }
       if (from < 6) {
-        // Fix type error: explicit cast to GeneratedColumn<Object>
-        await m.addColumn(tasks, tasks.type as GeneratedColumn<Object>);
-        await m.addColumn(tasks, tasks.authorId as GeneratedColumn<Object>);
+         // Migration for v6: Add 'type' and 'authorId' to tasks if missing
+         // Note: If columns already exist (e.g., from dev), try/catch or check.
+         // Assuming clean migration path or recreation.
+         try {
+           await m.addColumn(tasks, tasks.type as GeneratedColumn<Object>);
+           await m.addColumn(tasks, tasks.authorId as GeneratedColumn<Object>);
+         } catch (e) {
+           // Ignore if column already exists
+           print("Migration error (column might exist): $e");
+         }
       }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
-      // Force populate if database is empty or residents are missing
+      // Force populate if database is empty
+      // Check for residents specifically
       final residentCount = await (select(users)..where((t) => t.role.equals('resident'))).get().then((l) => l.length);
 
-      if (residentCount < 5) {
+      // Also check transactions
+      final transactionCount = await (select(transactions)).get().then((l) => l.length);
+
+      if (residentCount < 5 || transactionCount < 5) {
+         print("DATABASE SEEDING: Database appears empty or incomplete. Seeding initial data...");
          // Force insertion of residents and transactions
          await _populateInitialData();
       }
@@ -138,13 +150,8 @@ class AppDatabase extends _$AppDatabase {
     });
 
     // 3. Insert Transactions (AFTER users are inserted)
-    // We need to re-fetch users to link transactions correctly (although we forced IDs above)
-    // But we are in a transaction context? No, `batch` is one transaction.
-    // However, we can't select inside the same batch easily unless we commit first.
-    // So we do transactions in a separate step or just use the known IDs.
-
-    // Simple: use the first 10 resident IDs (1 to 10)
     await batch((batch) {
+      // Create 10 transactions linked to the first 10 residents
       for (int i = 0; i < 10; i++) {
         final userId = (i % 15) + 1; // 1 to 15
         final isIncome = i % 2 == 0;
@@ -154,7 +161,7 @@ class AppDatabase extends _$AppDatabase {
           TransactionsCompanion.insert(
             amount: (i + 1) * 100.0,
             date: DateTime.now().subtract(Duration(days: i * 2)),
-            description: isIncome ? 'Cotisation' : 'Achat matériel',
+            description: isIncome ? 'Cotisation Mensuelle' : 'Achat Petit Matériel',
             userId: Value(userId),
             type: isIncome ? 'income' : 'expense',
           ),
@@ -162,6 +169,8 @@ class AppDatabase extends _$AppDatabase {
         );
       }
     });
+
+    print("DATABASE SEEDING: Completed.");
   }
 }
 
