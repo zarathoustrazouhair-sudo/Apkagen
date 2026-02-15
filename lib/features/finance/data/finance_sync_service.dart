@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:drift/drift.dart' as drift;
@@ -46,7 +47,7 @@ class FinanceSyncService {
         'last_updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print("Sync failed: $e");
+      debugPrint("Sync failed: $e");
     }
   }
 }

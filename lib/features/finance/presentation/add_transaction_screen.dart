@@ -185,14 +185,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _processTransaction(AppDatabase db) async {
     final amountInput = double.tryParse(_amountController.text);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     if (amountInput == null || amountInput <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide.')));
+      scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Veuillez entrer un montant valide.')));
       return;
     }
 
     if (_transactionType == 'income') {
       if (_selectedUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un résident.')));
+        scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un résident.')));
         return;
       }
 
@@ -251,14 +254,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           );
         }
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        if (mounted) scaffoldMessenger.showSnackBar(SnackBar(content: Text('Erreur: $e')));
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     } else {
       // EXPENSE (Just insert transaction)
       if (_selectedProvider == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un prestataire.')));
+        scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Veuillez sélectionner un prestataire.')));
         return;
       }
 
@@ -273,12 +276,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
         );
 
-        if (mounted) {
-          Navigator.pop(context); // Close screen
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Dépense enregistrée avec succès !")));
-        }
+        // Use captured navigator and messenger
+        navigator.pop(); // Close screen
+        scaffoldMessenger.showSnackBar(const SnackBar(content: Text("Dépense enregistrée avec succès !")));
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        if (mounted) scaffoldMessenger.showSnackBar(SnackBar(content: Text('Erreur: $e')));
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }

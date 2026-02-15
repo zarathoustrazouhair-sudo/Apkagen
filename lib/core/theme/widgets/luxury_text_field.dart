@@ -10,6 +10,7 @@ class LuxuryTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
+  final bool enabled;
 
   const LuxuryTextField({
     super.key,
@@ -21,6 +22,7 @@ class LuxuryTextField extends StatelessWidget {
     this.keyboardType,
     this.onChanged,
     this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -31,7 +33,7 @@ class LuxuryTextField extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            color: AppTheme.gold.withOpacity(0.9),
+            color: enabled ? AppTheme.gold.withOpacity(0.9) : Colors.grey,
             fontWeight: FontWeight.bold,
             fontSize: 12,
             letterSpacing: 1.0,
@@ -45,12 +47,13 @@ class LuxuryTextField extends StatelessWidget {
           keyboardType: keyboardType,
           onChanged: onChanged,
           validator: validator,
-          style: const TextStyle(color: AppTheme.offWhite),
+          enabled: enabled,
+          style: TextStyle(color: enabled ? AppTheme.offWhite : Colors.grey),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: AppTheme.offWhite.withOpacity(0.4)),
             filled: true,
-            fillColor: AppTheme.darkNavy.withOpacity(0.5),
+            fillColor: AppTheme.darkNavy.withOpacity(enabled ? 0.5 : 0.2),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: AppTheme.gold.withOpacity(0.3)),
@@ -58,6 +61,10 @@ class LuxuryTextField extends StatelessWidget {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: AppTheme.gold.withOpacity(0.3)),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
